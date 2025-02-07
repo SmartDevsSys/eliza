@@ -8,10 +8,10 @@ import ReactMarkdown from 'react-markdown';
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
-import { Paperclip, Send, X } from "lucide-react";
+import { Loader2, Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Content, UUID } from "@elizaos/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
@@ -24,6 +24,7 @@ import { AudioRecorder } from "./audio-recorder";
 import { Badge } from "./ui/badge";
 import { useAutoScroll } from "./ui/chat/hooks/useAutoScroll";
 import { useTypingStatus } from "@/contexts/typing-status";
+import { useAuth } from "@/contexts/auth-context";
 
 type ExtraContentFields = {
     user: string;
@@ -32,7 +33,24 @@ type ExtraContentFields = {
     isTyping?: boolean;
 };
 
+type Message = {
+    id: string;
+    text: string;
+    user: string;
+    createdAt: string;
+    attachments?: {
+        url: string;
+        contentType: string;
+        title: string;
+    }[];
+};
+
 type ContentWithUser = Content & ExtraContentFields;
+
+type QueryMessage = Message & {
+    source?: string;
+    action?: string;
+};
 
 type AnimatedDivProps = AnimatedProps<{ style: React.CSSProperties }> & {
     children?: React.ReactNode;
@@ -47,6 +65,43 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const formRef = useRef<HTMLFormElement>(null);
 
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+
+    // Load existing messages
+    const messagesQuery = useQuery({
+        enabled: !!user,
+        queryKey: ["messages", agentId] as const,
+        queryFn: () => apiClient.loadMessages(agentId),
+        staleTime: Infinity,
+        retry: false,
+        gcTime: Infinity,
+    });
+
+    const { data: existingMessages, isLoading: isLoadingMessages } = messagesQuery;
+
+    // Handle query errors
+    useEffect(() => {
+        if (messagesQuery.error) {
+            toast({
+                variant: "destructive",
+                title: "Error loading messages",
+                description: messagesQuery.error.message,
+            });
+        }
+    }, [messagesQuery.error]);
+
+    // Initialize messages from Supabase data
+    useEffect(() => {
+        if (existingMessages) {
+            queryClient.setQueryData(
+                ["messages", agentId],
+                existingMessages.map((msg: QueryMessage) => ({
+                    ...msg,
+                    createdAt: new Date(msg.createdAt).getTime(),
+                }))
+            );
+        }
+    }, [existingMessages, agentId]);
 
     const getMessageVariant = (role: string) =>
         role !== "user" ? "received" : "sent";
@@ -118,9 +173,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
             },
         ];
 
+        // Only update local state for optimistic UI
         queryClient.setQueryData(
             ["messages", agentId],
-            (old: ContentWithUser[] = []) => [...old, ...newMessages]
+            (old: ContentWithUser[] = []) => [...old, ...newMessages.map(msg => ({
+                ...msg,
+                createdAt: Date.now(),
+            }))]
         );
 
         // Update typing status and send message
@@ -188,6 +247,27 @@ export default function Page({ agentId }: { agentId: UUID }) {
     });
 
     const CustomAnimatedDiv = animated.div as React.FC<AnimatedDivProps>;
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Please sign in to view messages</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLoadingMessages) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Loading messages...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col w-full h-full">
