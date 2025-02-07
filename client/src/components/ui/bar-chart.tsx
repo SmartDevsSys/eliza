@@ -80,7 +80,7 @@ export function BarChart({ data, xField, yField, categoryField }: BarChartProps)
       .selectAll("g")
       .data(categories)
       .join("g")
-      .attr("transform", (d, i) => `translate(0,${i * 20 - 10})`);
+      .attr("transform", (_, i) => `translate(0,${i * 20 - 10})`);
 
     legend.append("rect")
       .attr("x", width - 19)
