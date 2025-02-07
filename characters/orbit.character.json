@@ -2,7 +2,7 @@
     "name": "Orbit",
     "modelProvider": "deepseek",
     "plugins": [],
-    "clients": [],
+    "clients": ["telegram"],
     "settings": {
         "secrets": {},
         "voice": {}
