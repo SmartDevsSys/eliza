@@ -30,16 +30,13 @@ export default function RegisterPage() {
     }
 
     try {
-      const result = await signUp(email, password, username);
-      
-      if (result.success && result.needsEmailVerification) {
-        // Show success message and redirect
-        navigate("/auth/login", {
-          state: {
-            message: "Account created successfully! Please check your email to verify your account before signing in.",
-          },
-        });
-      }
+      await signUp(email, password, username);
+      // Show success message and redirect
+      navigate("/auth/login", {
+        state: {
+          message: "Account created successfully! Please check your email to verify your account before signing in.",
+        },
+      });
     } catch (error: any) {
       console.error("Error signing up:", error);
       // Show specific error messages for different cases
