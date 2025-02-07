@@ -1,6 +1,6 @@
 {
     "name": "Pixel",
-    "modelProvider": "deepseek",
+    "modelProvider": "mistral",
     "plugins": ["@elizaos/plugin-news"],
     "clients": [],
     "settings": {
