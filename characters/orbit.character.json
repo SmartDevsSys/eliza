@@ -1,7 +1,7 @@
 {
     "name": "Orbit",
     "modelProvider": "deepseek",
-    "plugins": [],
+    "plugins": ["@elizaos/plugin-news"],
     "clients": ["telegram"],
     "settings": {
         "secrets": {},
