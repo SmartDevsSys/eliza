@@ -1,5 +1,6 @@
--- Enable Row Level Security
+-- Enable Row Level Security and vector extension
 ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Create user_settings table
 CREATE TABLE IF NOT EXISTS public.user_settings (
@@ -135,3 +136,19 @@ END $$;
 UPDATE storage.buckets 
 SET public = true 
 WHERE id = 'agent-logos';
+
+-- Create function to automatically create user settings on user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user_settings()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_settings (user_id)
+    VALUES (NEW.id);
+    RETURN NEW;
+END;
+$$ language plpgsql security definer;
+
+-- Create trigger for new user settings
+DROP TRIGGER IF EXISTS on_auth_user_created_settings ON auth.users;
+CREATE TRIGGER on_auth_user_created_settings
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_settings();

@@ -33,7 +33,7 @@ export function BarChart({ data, xField, yField, categoryField }: BarChartProps)
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // Create scales
-    const categories = Array.from(new Set(data.map(d => d[categoryField as keyof typeof d])));
+    const categories = Array.from(new Set(data.map(d => String(d[categoryField as keyof typeof d]))));
     const x = d3.scaleBand<string>()
       .domain(data.map(d => String(d[xField as keyof typeof d])))
       .range([0, width])
