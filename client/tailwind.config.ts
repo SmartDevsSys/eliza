@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 export default {
     darkMode: ["class"],
@@ -80,5 +81,30 @@ export default {
     		}
     	}
     },
-    plugins: [tailwindAnimate],
+    plugins: [
+        tailwindAnimate,
+        typography,
+        function({ addComponents, theme }) {
+            addComponents({
+                '.prose': {
+                    '--tw-prose-body': theme('colors.foreground'),
+                    '--tw-prose-headings': theme('colors.foreground'),
+                    '--tw-prose-lead': theme('colors.muted.foreground'),
+                    '--tw-prose-links': theme('colors.primary.DEFAULT'),
+                    '--tw-prose-bold': theme('colors.foreground'),
+                    '--tw-prose-counters': theme('colors.foreground'),
+                    '--tw-prose-bullets': theme('colors.foreground'),
+                    '--tw-prose-hr': theme('colors.border'),
+                    '--tw-prose-quotes': theme('colors.foreground'),
+                    '--tw-prose-quote-borders': theme('colors.border'),
+                    '--tw-prose-captions': theme('colors.muted.foreground'),
+                    '--tw-prose-code': theme('colors.foreground'),
+                    '--tw-prose-pre-code': theme('colors.foreground'),
+                    '--tw-prose-pre-bg': 'hsl(var(--muted))',
+                    '--tw-prose-th-borders': theme('colors.border'),
+                    '--tw-prose-td-borders': theme('colors.border'),
+                }
+            })
+        }
+    ],
 } satisfies Config;

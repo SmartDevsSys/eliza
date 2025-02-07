@@ -1,7 +1,7 @@
 {
     "name": "Lionel Pessi",
     "modelProvider": "anthropic",
-    "plugins": ["@elizaos/plugin-football"],
+    "plugins": ["@elizaos/plugin-web-search"],
     "clients": [],
     "settings": {
         "secrets": {},

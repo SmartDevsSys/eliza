@@ -1,6 +1,6 @@
 {
     "name": "Nova",
-    "modelProvider": "anthropic",
+    "modelProvider": "deepseek",
     "plugins": [],
     "clients": [],
     "settings": {

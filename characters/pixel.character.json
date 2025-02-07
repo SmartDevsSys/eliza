@@ -1,6 +1,6 @@
 {
     "name": "Pixel",
-    "modelProvider": "anthropic",
+    "modelProvider": "deepseek",
     "plugins": [],
     "clients": [],
     "settings": {

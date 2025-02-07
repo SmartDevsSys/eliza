@@ -4,6 +4,7 @@ import {
     ChatBubbleMessage,
     ChatBubbleTimestamp,
 } from "@/components/ui/chat/chat-bubble";
+import ReactMarkdown from 'react-markdown';
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
@@ -224,11 +225,46 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             isLoading={message?.isLoading || message?.isTyping}
                                         >
                                             {message?.user !== "user" ? (
-                                                <AIWriter>
-                                                    {message?.text}
-                                                </AIWriter>
+                                                <div className="prose max-w-none">
+                                                    <ReactMarkdown
+                                                        components={{
+                                                            // Customize link rendering
+                                                            a: ({ node, ...props }) => (
+                                                                <a
+                                                                    {...props}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-primary hover:underline"
+                                                                />
+                                                            ),
+                                                            // Customize emoji rendering
+                                                            p: ({ node, ...props }) => (
+                                                                <p {...props} className="whitespace-pre-wrap my-0" />
+                                                            ),
+                                                            // Customize list rendering
+                                                            ul: ({ node, ...props }) => (
+                                                                <ul {...props} className="my-1" />
+                                                            ),
+                                                            li: ({ node, ...props }) => (
+                                                                <li {...props} className="my-0" />
+                                                            ),
+                                                            // Customize code block rendering
+                                                            code: ({ inline, className, children, ...props }: any) => {
+                                                                return inline ? 
+                                                                    <code {...props} className="bg-muted px-1.5 py-0.5 rounded text-sm">
+                                                                        {children}
+                                                                    </code> :
+                                                                    <code {...props} className="block bg-muted p-4 rounded-lg text-sm overflow-x-auto">
+                                                                        {children}
+                                                                    </code>
+                                                            }
+                                                        }}
+                                                    >
+                                                        {message?.text?.replace(/\\n/g, '\n').replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
+                                                    </ReactMarkdown>
+                                                </div>
                                             ) : (
-                                                message?.text
+                                                <span className="whitespace-pre-wrap">{message?.text}</span>
                                             )}
                                             {/* Attachments */}
                                             <div>

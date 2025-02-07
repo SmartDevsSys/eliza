@@ -1,6 +1,6 @@
 {
     "name": "Orbit",
-    "modelProvider": "anthropic",
+    "modelProvider": "deepseek",
     "plugins": [],
     "clients": [],
     "settings": {
