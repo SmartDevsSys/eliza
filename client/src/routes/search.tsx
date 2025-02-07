@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, MessageSquare } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import type { UUID } from "@elizaos/core";
 import { AgentStatus } from "@/components/ui/typing-indicator";
 import { useTypingStatus } from "@/contexts/typing-status";
+import Chat from "@/components/chat";
 
 interface Agent {
     id: UUID;
@@ -16,6 +17,7 @@ interface Agent {
 }
 
 export default function SearchPage() {
+    const [selectedAgent, setSelectedAgent] = useState<UUID | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const { typingAgents } = useTypingStatus();
     
@@ -38,36 +40,39 @@ export default function SearchPage() {
     }, [agents, searchQuery]);
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold">Available Agents</h1>
-                <NavLink to="/create">
-                    <Button className="gap-2">
-                        <Plus className="size-4" />
-                        Create New Agent
-                    </Button>
-                </NavLink>
-            </div>
-
-            <div className="max-w-xl mx-auto mb-8">
-                <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search agents by name..." 
-                        className="pl-10"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+        <div className="flex h-[calc(100dvh-4rem)]">
+            {/* Left sidebar */}
+            <div className="w-[350px] border-r flex flex-col">
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h1 className="text-xl font-semibold">Agents</h1>
+                    <NavLink to="/create">
+                        <Button size="icon" variant="ghost">
+                            <Plus className="size-4" />
+                        </Button>
+                    </NavLink>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredAgents.map((agent: Agent) => (
-                    <div
-                        key={agent.id}
-                        className="group relative rounded-lg border bg-card p-6 hover:shadow-md transition-all"
-                    >
-                        <div className="flex items-center gap-4">
+                <div className="p-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search agents..." 
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    {filteredAgents.map((agent: Agent) => (
+                        <div
+                            key={agent.id}
+                            className={`p-4 flex items-center gap-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                                selectedAgent === agent.id ? 'bg-muted' : ''
+                            }`}
+                            onClick={() => setSelectedAgent(agent.id)}
+                        >
                             <Avatar className="size-12 border">
                                 <AvatarImage src="/elizaos-icon.png" />
                             </Avatar>
@@ -80,23 +85,31 @@ export default function SearchPage() {
                                     isTyping={typingAgents.has(agent.id)}
                                 />
                             </div>
-                            <NavLink to={`/chat/${agent.id}`}>
-                                <Button variant="secondary" size="icon">
-                                    <MessageSquare className="size-4" />
-                                </Button>
-                            </NavLink>
                         </div>
-                    </div>
-                ))}
+                    ))}
+
+                    {filteredAgents.length === 0 && (
+                        <div className="text-center py-12">
+                            <p className="text-muted-foreground">
+                                No agents found matching your search
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {filteredAgents.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-lg text-muted-foreground">
-                        No agents found matching your search
-                    </p>
-                </div>
-            )}
+            {/* Right chat area */}
+            <div className="flex-1 border-l bg-muted/10">
+                {selectedAgent ? (
+                    <Chat agentId={selectedAgent} />
+                ) : (
+                    <div className="h-full flex items-center justify-center">
+                        <p className="text-muted-foreground">
+                            Select an agent to start chatting
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

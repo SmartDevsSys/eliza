@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Plus } from "lucide-react";
+import { BarChart } from "@/components/ui/bar-chart";
 
 interface Agent {
   id: string;
   name: string;
   status: string;
   deployment_url?: string;
+  plan_type: string;
 }
 
 interface Subscription {
@@ -16,11 +19,20 @@ interface Subscription {
   status: string;
 }
 
+interface RequestStat {
+  agent_id: string;
+  agent_name: string;
+  request_count: number;
+  date: string;
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requestStats, setRequestStats] = useState<RequestStat[]>([]);
+  const [agentsByPlan, setAgentsByPlan] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -37,7 +49,7 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         // Fetch data in parallel
-        const [agentsResponse, subscriptionResponse] = await Promise.all([
+        const [agentsResponse, subscriptionResponse, statsResponse] = await Promise.all([
           supabase
             .from("agents")
             .select("*")
@@ -46,15 +58,30 @@ export default function DashboardPage() {
             .from("subscriptions")
             .select("plan_type, status")
             .eq("user_id", user.id)
-            .single()
+            .single(),
+          supabase
+            .from("request_stats")
+            .select("agent_id, agent_name, request_count, date")
+            .eq("user_id", user.id)
+            .order("date", { ascending: true })
+            .limit(100)
         ]);
 
         if (mounted) {
           if (!agentsResponse.error && agentsResponse.data) {
             setAgents(agentsResponse.data);
+            // Calculate agents by plan
+            const planCounts: Record<string, number> = {};
+            agentsResponse.data.forEach(agent => {
+              planCounts[agent.plan_type] = (planCounts[agent.plan_type] || 0) + 1;
+            });
+            setAgentsByPlan(planCounts);
           }
           if (!subscriptionResponse.error && subscriptionResponse.data) {
             setSubscription(subscriptionResponse.data);
+          }
+          if (!statsResponse.error && statsResponse.data) {
+            setRequestStats(statsResponse.data);
           }
         }
       } catch (error) {
@@ -112,6 +139,14 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <Button onClick={() => window.location.href = '/deploy'}>
+          <Plus className="mr-2 h-4 w-4" />
+          Deploy Agent
+        </Button>
+      </div>
+      
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -120,7 +155,7 @@ export default function DashboardPage() {
           <CardContent className="space-y-2">
             <div>
               <div className="text-sm text-muted-foreground">Username</div>
-              <div className="font-medium">{user?.email?.split("@")[0] || 'N/A'}</div>
+              <div className="font-medium">{user?.user_metadata?.username || 'N/A'}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Email</div>
@@ -132,6 +167,48 @@ export default function DashboardPage() {
                 {subscription?.plan_type || "Loading..."}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Agents by Plan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(agentsByPlan).length === 0 ? (
+              <p className="text-muted-foreground">No agents deployed yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {Object.entries(agentsByPlan).map(([plan, count]) => (
+                  <div key={plan} className="flex justify-between items-center">
+                    <span className="capitalize">{plan}</span>
+                    <span className="font-medium">{count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Request Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {requestStats.length === 0 ? (
+              <p className="text-muted-foreground">No request data available.</p>
+            ) : (
+              <div className="h-[300px]">
+                <BarChart
+                  data={requestStats}
+                  xField="date"
+                  yField="request_count"
+                  categoryField="agent_name"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

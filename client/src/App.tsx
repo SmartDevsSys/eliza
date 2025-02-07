@@ -17,6 +17,7 @@ import Overview from "./routes/overview";
 import Dashboard from "./routes/dashboard";
 import Search from "./routes/search";
 import Create from "./routes/create";
+import Deploy from "./routes/deploy";
 import AgentStatus from "./routes/agent-status";
 import Integrations from "./routes/integrations";
 import useVersion from "./hooks/use-version";
@@ -61,6 +62,7 @@ function App() {
                                                             <Route path="/" element={<Dashboard />} />
                                                             <Route path="search" element={<Search />} />
                                                             <Route path="create" element={<Create />} />
+                                                            <Route path="deploy" element={<Deploy />} />
                                                             <Route path="chat/:agentId" element={<Chat />} />
                                                             <Route path="settings" element={<Settings />} />
                                                             <Route path="settings/:agentId" element={<Overview />} />

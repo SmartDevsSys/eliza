@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
-import { Paperclip, Send, X } from "lucide-react";
+import { Paperclip, Send, X, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Content, UUID } from "@elizaos/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -190,8 +190,8 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const CustomAnimatedDiv = animated.div as React.FC<AnimatedDivProps>;
 
     return (
-        <div className="flex flex-col w-full h-[calc(100dvh)] p-4">
-            <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col w-full h-full">
+            <div className="flex-1 overflow-y-auto px-4 py-4">
                 <ChatMessageList 
                     scrollRef={scrollRef}
                     isAtBottom={isAtBottom}
@@ -224,7 +224,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             isLoading={message?.isLoading || message?.isTyping}
                                         >
                                             {message?.user !== "user" ? (
-                                                <div className="prose max-w-none">
+                                                <div className="prose max-w-[600px]">
                                                     <ReactMarkdown
                                                         components={{
                                                             // Customize link rendering
@@ -263,7 +263,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                                     </ReactMarkdown>
                                                 </div>
                                             ) : (
-                                                <span className="whitespace-pre-wrap">{message?.text}</span>
+                                                <span className="whitespace-pre-wrap block max-w-[600px]">{message?.text}</span>
                                             )}
                                             {/* Attachments */}
                                             <div>
@@ -278,7 +278,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                                                 src={attachment.url}
                                                                 width="100%"
                                                                 height="100%"
-                                                                className="w-64 rounded-md"
+                                                                className="max-w-[600px] rounded-md"
                                                             />
                                                             <div className="flex items-center justify-between gap-4">
                                                                 <span />
@@ -337,55 +337,48 @@ export default function Page({ agentId }: { agentId: UUID }) {
                     })}
                 </ChatMessageList>
             </div>
-            <div className="px-4 pb-4">
+            <div className="border-t bg-background">
                 <form
                     ref={formRef}
                     onSubmit={handleSendMessage}
-                    className="relative rounded-md border bg-card"
+                    className="px-4 py-3"
                 >
                     {selectedFile ? (
-                        <div className="p-3 flex">
-                            <div className="relative rounded-md border p-2">
+                        <div className="mb-3">
+                            <div className="relative inline-block">
                                 <Button
                                     onClick={() => setSelectedFile(null)}
                                     className="absolute -right-2 -top-2 size-[22px] ring-2 ring-background"
                                     variant="outline"
                                     size="icon"
                                 >
-                                    <X />
+                                    <X className="size-3" />
                                 </Button>
                                 <img
                                     alt="Selected file"
                                     src={URL.createObjectURL(selectedFile)}
                                     height="100%"
                                     width="100%"
-                                    className="aspect-square object-contain w-16"
+                                    className="aspect-square object-contain w-16 rounded border"
                                 />
                             </div>
                         </div>
                     ) : null}
-                    <ChatInput
-                        ref={inputRef}
-                        onKeyDown={handleKeyDown}
-                        value={input}
-                        onChange={({ target }) => setInput(target.value)}
-                        placeholder="Type your message here..."
-                        className="min-h-12 resize-none rounded-md bg-card border-0 p-3 shadow-none focus-visible:ring-0"
-                    />
-                    <div className="flex items-center p-3 pt-0">
+                    <div className="flex items-center gap-2">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div>
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        className="rounded-full"
                                         onClick={() => {
                                             if (fileInputRef.current) {
                                                 fileInputRef.current.click();
                                             }
                                         }}
                                     >
-                                        <Paperclip className="size-4" />
+                                        <Paperclip className="size-5" />
                                         <span className="sr-only">
                                             Attach file
                                         </span>
@@ -399,25 +392,38 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                     />
                                 </div>
                             </TooltipTrigger>
-                            <TooltipContent side="left">
+                            <TooltipContent side="top">
                                 <p>Attach file</p>
                             </TooltipContent>
                         </Tooltip>
-                        <AudioRecorder
-                            agentId={agentId}
-                            onChange={(newInput: string) => setInput(newInput)}
-                        />
-                        <Button
-                            disabled={!input || sendMessageMutation?.isPending}
-                            type="submit"
-                            size="sm"
-                            className="ml-auto gap-1.5 h-[30px]"
-                        >
-                            {sendMessageMutation?.isPending
-                                ? "..."
-                                : "Send Message"}
-                            <Send className="size-3.5" />
-                        </Button>
+
+                        <div className="flex-1">
+                            <ChatInput
+                                ref={inputRef}
+                                onKeyDown={handleKeyDown}
+                                value={input}
+                                onChange={({ target }) => setInput(target.value)}
+                                placeholder="Type a message"
+                                className="min-h-10 resize-none rounded-full bg-muted px-4 py-2 shadow-none focus-visible:ring-0"
+                            />
+                        </div>
+
+                        {input ? (
+                            <Button
+                                disabled={sendMessageMutation?.isPending}
+                                type="submit"
+                                size="icon"
+                                className="rounded-full"
+                            >
+                                <Send className="size-5" />
+                            </Button>
+                        ) : (
+                            <AudioRecorder
+                                agentId={agentId}
+                                onChange={(newInput: string) => setInput(newInput)}
+                                className="rounded-full"
+                            />
+                        )}
                     </div>
                 </form>
             </div>
