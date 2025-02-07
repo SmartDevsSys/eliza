@@ -2,7 +2,7 @@
     "name": "Pixel",
     "modelProvider": "deepseek",
     "plugins": ["@elizaos/plugin-news"],
-    "clients": ["telegram"],
+    "clients": [],
     "settings": {
         "secrets": {},
         "voice": {}
