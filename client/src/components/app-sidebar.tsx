@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import info from "@/lib/info.json";
 import {
     Sidebar,
@@ -11,24 +10,12 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { apiClient } from "@/lib/api";
-import { NavLink, useLocation } from "react-router";
-import type { UUID } from "@elizaos/core";
-import { Book, Cog, User } from "lucide-react";
-import ConnectionStatus from "./connection-status";
+import { NavLink } from "react-router-dom";
+import { Home, Search, Plus, Share2 } from "lucide-react";
+import UserConnectionStatus from "./user-connection-status";
 
 export function AppSidebar() {
-    const location = useLocation();
-    const query = useQuery({
-        queryKey: ["agents"],
-        queryFn: () => apiClient.getAgents(),
-        refetchInterval: 5_000,
-    });
-
-    const agents = query?.data?.agents;
-
     return (
         <Sidebar>
             <SidebarHeader>
@@ -57,65 +44,56 @@ export function AppSidebar() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
+                    <SidebarGroupLabel>Main</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <NavLink to="/">
+                                    <SidebarMenuButton>
+                                        <Home className="size-4" />
+                                        <span>Dashboard</span>
+                                    </SidebarMenuButton>
+                                </NavLink>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                <SidebarGroup>
                     <SidebarGroupLabel>Agents</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {query?.isPending ? (
-                                <div>
-                                    {Array.from({ length: 5 }).map(
-                                        (_, _index) => (
-                                            <SidebarMenuItem key={"skeleton-item"}>
-                                                <SidebarMenuSkeleton />
-                                            </SidebarMenuItem>
-                                        )
-                                    )}
-                                </div>
-                            ) : (
-                                <div>
-                                    {agents?.map(
-                                        (agent: { id: UUID; name: string }) => (
-                                            <SidebarMenuItem key={agent.id}>
-                                                <NavLink
-                                                    to={`/chat/${agent.id}`}
-                                                >
-                                                    <SidebarMenuButton
-                                                        isActive={location.pathname.includes(
-                                                            agent.id
-                                                        )}
-                                                    >
-                                                        <User />
-                                                        <span>
-                                                            {agent.name}
-                                                        </span>
-                                                    </SidebarMenuButton>
-                                                </NavLink>
-                                            </SidebarMenuItem>
-                                        )
-                                    )}
-                                </div>
-                            )}
+                            <SidebarMenuItem>
+                                <NavLink to="/search">
+                                    <SidebarMenuButton>
+                                        <Search className="size-4" />
+                                        <span>Search</span>
+                                    </SidebarMenuButton>
+                                </NavLink>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <NavLink to="/create">
+                                    <SidebarMenuButton>
+                                        <Plus className="size-4" />
+                                        <span>Create</span>
+                                    </SidebarMenuButton>
+                                </NavLink>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <NavLink to="/integrations">
+                                    <SidebarMenuButton>
+                                        <Share2 className="size-4" />
+                                        <span>Integrations</span>
+                                    </SidebarMenuButton>
+                                </NavLink>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <NavLink
-                            to="https://elizaos.github.io/eliza/docs/intro/"
-                            target="_blank"
-                        >
-                            <SidebarMenuButton>
-                                <Book /> Documentation
-                            </SidebarMenuButton>
-                        </NavLink>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton disabled>
-                            <Cog /> Settings
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <ConnectionStatus />
+                    <UserConnectionStatus />
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>

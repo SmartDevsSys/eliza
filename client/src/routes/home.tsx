@@ -1,70 +1,80 @@
-import { useQuery } from "@tanstack/react-query";
-import { Cog } from "lucide-react";
-import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { apiClient } from "@/lib/api";
-import { NavLink } from "react-router";
-import type { UUID } from "@elizaos/core";
-import { formatAgentName } from "@/lib/utils";
+import { Home as HomeIcon, Play } from "lucide-react";
+import { motion } from "framer-motion";
+import { NavLink } from "react-router-dom";
 
 export default function Home() {
-    const query = useQuery({
-        queryKey: ["agents"],
-        queryFn: () => apiClient.getAgents(),
-        refetchInterval: 5_000
-    });
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.2
+            }
+        }
+    };
 
-    const agents = query?.data?.agents;
+    const itemVariants = {
+        hidden: { 
+            opacity: 0,
+            y: 20
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.8,
+                ease: "easeOut"
+            }
+        }
+    };
 
     return (
-        <div className="flex flex-col gap-4 h-full p-4">
-            <PageTitle title="Agents" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {agents?.map((agent: { id: UUID; name: string }) => (
-                    <Card key={agent.id}>
-                        <CardHeader>
-                            <CardTitle>{agent?.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md bg-muted aspect-square w-full grid place-items-center">
-                                <div className="text-6xl font-bold uppercase">
-                                    {formatAgentName(agent?.name)}
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <div className="flex items-center gap-4 w-full">
-                                <NavLink
-                                    to={`/chat/${agent.id}`}
-                                    className="w-full grow"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        className="w-full grow"
-                                    >
-                                        Chat
-                                    </Button>
-                                </NavLink>
-                                <NavLink
-                                    to={`/settings/${agent.id}`}
-                                    key={agent.id}
-                                >
-                                    <Button size="icon" variant="outline">
-                                        <Cog />
-                                    </Button>
-                                </NavLink>
-                            </div>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
+        <div className="min-h-screen flex items-center justify-center">
+            <motion.div
+                className="text-center max-w-3xl mx-auto px-4"
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+            >
+                <motion.h1
+                    className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
+                    variants={itemVariants}
+                >
+                    Your AI Agents That Learn & Grow
+                </motion.h1>
+                
+                <motion.p
+                    className="text-lg sm:text-xl text-muted-foreground mb-8"
+                    variants={itemVariants}
+                >
+                    Experience the next generation of AI assistance. Our agents don't just respond – 
+                    they learn, adapt, and evolve to become your perfect digital companions.
+                </motion.p>
+                
+                <motion.div
+                    className="flex flex-wrap justify-center gap-4 mb-16"
+                    variants={itemVariants}
+                >
+                    <NavLink to="/search">
+                        <Button
+                            size="lg"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500"
+                        >
+                            <HomeIcon className="mr-2 h-4 w-4" />
+                            Get Started Free
+                        </Button>
+                    </NavLink>
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        className="border-white/20 hover:bg-white/10"
+                    >
+                        <Play className="mr-2 h-4 w-4" />
+                        Watch Demo
+                    </Button>
+                </motion.div>
+            </motion.div>
         </div>
     );
 }

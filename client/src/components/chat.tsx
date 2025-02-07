@@ -23,11 +23,13 @@ import type { IAttachment } from "@/types";
 import { AudioRecorder } from "./audio-recorder";
 import { Badge } from "./ui/badge";
 import { useAutoScroll } from "./ui/chat/hooks/useAutoScroll";
+import { useTypingStatus } from "@/contexts/typing-status";
 
 type ExtraContentFields = {
     user: string;
     createdAt: number;
     isLoading?: boolean;
+    isTyping?: boolean;
 };
 
 type ContentWithUser = Content & ExtraContentFields;
@@ -69,6 +71,15 @@ export default function Page({ agentId }: { agentId: UUID }) {
         }
     };
 
+    const { setAgentTyping } = useTypingStatus();
+
+    useEffect(() => {
+        return () => {
+            // Cleanup typing status when leaving chat
+            setAgentTyping(agentId, false);
+        };
+    }, [agentId, setAgentTyping]);
+
     const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!input) return;
@@ -83,17 +94,26 @@ export default function Page({ agentId }: { agentId: UUID }) {
               ]
             : undefined;
 
+        const messageText = input;
+        const messageFile = selectedFile;
+
+        // Clear input immediately
+        setSelectedFile(null);
+        setInput("");
+        formRef.current?.reset();
+
         const newMessages = [
             {
-                text: input,
+                text: messageText,
                 user: "user",
                 createdAt: Date.now(),
                 attachments,
             },
             {
-                text: input,
+                text: "",
                 user: "system",
                 isLoading: true,
+                isTyping: true,
                 createdAt: Date.now(),
             },
         ];
@@ -103,14 +123,12 @@ export default function Page({ agentId }: { agentId: UUID }) {
             (old: ContentWithUser[] = []) => [...old, ...newMessages]
         );
 
+        // Update typing status and send message
+        setAgentTyping(agentId, true);
         sendMessageMutation.mutate({
-            message: input,
-            selectedFile: selectedFile ? selectedFile : null,
+            message: messageText,
+            selectedFile: messageFile || null,
         });
-
-        setSelectedFile(null);
-        setInput("");
-        formRef.current?.reset();
     };
 
     useEffect(() => {
@@ -129,10 +147,11 @@ export default function Page({ agentId }: { agentId: UUID }) {
             selectedFile?: File | null;
         }) => apiClient.sendMessage(agentId, message, selectedFile),
         onSuccess: (newMessages: ContentWithUser[]) => {
+            setAgentTyping(agentId, false);
             queryClient.setQueryData(
                 ["messages", agentId],
                 (old: ContentWithUser[] = []) => [
-                    ...old.filter((msg) => !msg.isLoading),
+                    ...old.filter((msg) => !msg.isLoading && !msg.isTyping),
                     ...newMessages.map((msg) => ({
                         ...msg,
                         createdAt: Date.now(),
@@ -187,22 +206,22 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                     ...style,
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: "0.5rem",
-                                    padding: "1rem",
+                                    gap: "1rem",
+                                    padding: "0.5rem 0",
                                 }}
                             >
                                 <ChatBubble
                                     variant={variant}
-                                    className="flex flex-row items-center gap-2"
+                                    className="flex flex-row items-start gap-2"
                                 >
                                     {message?.user !== "user" ? (
-                                        <Avatar className="size-8 p-1 border rounded-full select-none">
+                                        <Avatar className="size-8 mt-1 border rounded-full select-none">
                                             <AvatarImage src="/elizaos-icon.png" />
                                         </Avatar>
                                     ) : null}
                                     <div className="flex flex-col">
                                         <ChatBubbleMessage
-                                            isLoading={message?.isLoading}
+                                            isLoading={message?.isLoading || message?.isTyping}
                                         >
                                             {message?.user !== "user" ? (
                                                 <AIWriter>
@@ -237,7 +256,8 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                         </ChatBubbleMessage>
                                         <div className="flex items-center gap-4 justify-between w-full mt-1">
                                             {message?.text &&
-                                            !message?.isLoading ? (
+                                            !message?.isLoading &&
+                                            !message?.isTyping ? (
                                                 <div className="flex items-center gap-1">
                                                     <CopyButton
                                                         text={message?.text}
@@ -250,7 +270,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             ) : null}
                                             <div
                                                 className={cn([
-                                                    message?.isLoading
+                                                    message?.isLoading || message?.isTyping
                                                         ? "mt-2"
                                                         : "",
                                                     "flex items-center justify-between gap-4 select-none",
