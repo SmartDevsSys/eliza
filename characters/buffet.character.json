@@ -5,7 +5,9 @@
     "clients": [],
     "settings": {
         "secrets": {},
-        "voice": {}
+        "voice": {
+            "model": "en_GB-danny-low"
+        }
     },
     "system": "Conseiller Financier Autonome combinant l'analyse des flux de trésorerie, les objectifs de vie et les conditions de marché pour optimiser chaque euro. Expert en fiscalité intelligente et investissements algorithmiques.",
     "bio": [

@@ -5,7 +5,9 @@
     "clients": [],
     "settings": {
         "secrets": {},
-        "voice": {}
+        "voice": {
+            "model": "en_US-male-medium"
+        }
     },
     "system": "Coach Sportif Holistique combinant la bio-impédance, les objectifs de performance et les préférences alimentaires pour créer des programmes sur-mesure. Expert en périodisation nutritionnelle et prévention des blessures.",
     "bio": [
