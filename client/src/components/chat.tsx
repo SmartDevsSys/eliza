@@ -1,5 +1,15 @@
 import { Button } from "@/components/ui/button";
 import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
     ChatBubble,
     ChatBubbleMessage,
     ChatBubbleTimestamp,
@@ -14,7 +24,7 @@ import type { Content, UUID } from "@elizaos/core";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
-import { Avatar, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import CopyButton from "./copy-button";
 import ChatTtsButton from "./ui/chat/chat-tts-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -52,7 +62,6 @@ type QueryMessage = Message & {
     action?: string;
 };
 
-
 export default function Page({ agentId }: { agentId: UUID }) {
     const { toast } = useToast();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -63,6 +72,16 @@ export default function Page({ agentId }: { agentId: UUID }) {
 
     const queryClient = useQueryClient();
     const { user } = useAuth();
+
+    // Load agent information
+    const agentQuery = useQuery({
+        enabled: !!agentId,
+        queryKey: ["agent", agentId] as const,
+        queryFn: () => apiClient.getAgent(agentId),
+        staleTime: Infinity,
+        retry: false,
+        gcTime: Infinity,
+    });
 
     // Load existing messages
     const messagesQuery = useQuery({
@@ -279,6 +298,74 @@ export default function Page({ agentId }: { agentId: UUID }) {
 
     return (
         <div className="flex flex-col w-full h-full">
+            <div className="border-b bg-background">
+                <div className="flex items-center justify-between py-2.5 px-4">
+                    <div className="flex items-center gap-2">
+                        <Avatar className="size-10 border rounded-full select-none">
+                            <AvatarImage src={`/agents/${agentId}/icon.png`} />
+                            <AvatarFallback>
+                                <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                            <h3 className="font-medium text-base">{agentQuery.data?.character.name || "ElizaOS Assistant"}</h3>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const jsonStr = JSON.stringify(messages, null, 2);
+                                const blob = new Blob([jsonStr], { type: 'application/json' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `chat-export-${new Date().toISOString()}.json`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                            }}
+                        >
+                            Export
+                        </Button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                    Clear Chat
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>Clear Chat History</DialogTitle>
+                                    <DialogDescription>
+                                        Are you sure you want to clear all messages? This action cannot be undone.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button variant="outline">
+                                            Cancel
+                                        </Button>
+                                    </DialogClose>
+                                    <DialogClose asChild>
+                                        <Button 
+                                            variant="destructive"
+                                            onClick={() => {
+                                                queryClient.setQueryData(["messages", agentId], []);
+                                            }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    </DialogClose>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+            </div>
+            
             <div className="flex-1 overflow-y-auto px-4 py-4 relative">
                 <ChatMessageList 
                     scrollRef={scrollRef}
@@ -301,7 +388,10 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                         >
                                             {message?.user !== "user" ? (
                                                 <Avatar className="size-8 mt-1 border rounded-full select-none">
-                                                    <AvatarImage src="/elizaos-icon.png" />
+                                                    <AvatarImage src={`/agents/${agentId}/icon.png`} />
+                                                    <AvatarFallback>
+                                                        <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
+                                                    </AvatarFallback>
                                                 </Avatar>
                                             ) : null}
                                             <div className="flex flex-col">

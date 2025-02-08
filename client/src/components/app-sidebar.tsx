@@ -12,7 +12,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavLink } from "react-router-dom";
-import { Home, Search, Plus, Share2 } from "lucide-react";
+import { Home, MessageSquare, Plus, Share2 } from "lucide-react";
 import UserConnectionStatus from "./user-connection-status";
 
 export function AppSidebar() {
@@ -66,8 +66,8 @@ export function AppSidebar() {
                             <SidebarMenuItem>
                                 <NavLink to="/search">
                                     <SidebarMenuButton>
-                                        <Search className="size-4" />
-                                        <span>Search</span>
+                                        <MessageSquare className="size-4" />
+                                        <span>Chat</span>
                                     </SidebarMenuButton>
                                 </NavLink>
                             </SidebarMenuItem>
