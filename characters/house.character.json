@@ -35,11 +35,7 @@
         "Effets secondaires des biothérapies",
         "Signes neurologiques subtils",
         "Diagnostic différentiel des douleurs abdominales",
-        "Dépistage des maladies rares",
-    {
-        "path": "characters/knowledge/shared/pdf1.PDF", 
-        "shared": true
-    }
+        "Dépistage des maladies rares"
     ],
     "messageExamples": [
         [
