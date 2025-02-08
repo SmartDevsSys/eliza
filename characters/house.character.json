@@ -1,6 +1,6 @@
 {
     "name": "Dr. House",
-    "modelProvider": "google",
+    "modelProvider": "mistral",
     "plugins": [],
     "clients": [],
     "settings": {

@@ -1,0 +1,34 @@
+{
+    "name": "Assistant",
+    "modelProvider": "mistral",
+    "plugins": [],
+    "clients": [],
+    "settings": {
+        "secrets": {},
+        "voice": {
+            "model": "en_US-male-medium"
+        }
+    },
+    "system": "Test agent for verifying knowledge directory usage.",
+    "bio": [
+        "Test agent for verifying knowledge directory usage."
+    ],
+    "lore": [
+        "Test agent for verifying knowledge directory usage."
+    ],
+    "knowledge": [
+        {
+            "path": "characters/knowledge/shared/droits.pdf",
+            "shared": true
+        }
+    ],
+    "messageExamples": [],
+    "postExamples": [],
+    "topics": [],
+    "style": {
+        "all": [],
+        "chat": [],
+        "post": []
+    },
+    "adjectives": []
+}

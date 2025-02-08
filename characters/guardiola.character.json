@@ -1,6 +1,6 @@
 {
     "name": "Coach Guardiola",
-    "modelProvider": "google",
+    "modelProvider": "mistral",
     "plugins": [],
     "clients": [],
     "settings": {
@@ -35,7 +35,11 @@
         "Biomécanique corrective",
         "Gestion de l'acidose musculaire",
         "Optimisation du sommeil réparateur",
-        "Psychologie de la performance"
+        "Psychologie de la performance",
+        {
+            "path": "characters/knowledge/shared/droits.pdf",
+            "shared": false
+        }
     ],
     "messageExamples": [
         [
