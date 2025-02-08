@@ -127,6 +127,12 @@ export default function Page({ agentId }: { agentId: UUID }) {
         smooth: true,
     });
 
+    const messages = queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) || [];
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
     useEffect(() => {
         // Ensure messages are properly positioned when switching agents
         const messages = queryClient.getQueryData(["messages", agentId]);
@@ -212,14 +218,39 @@ export default function Page({ agentId }: { agentId: UUID }) {
         });
     };
 
-    const messages = queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) || [];
-
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
         }
         scrollToBottom();
+        const savedScrollPosition = localStorage.getItem(`chat-scroll-${agentId}`);
+        if (savedScrollPosition && scrollRef.current) {
+            scrollRef.current.scrollTop = parseInt(savedScrollPosition, 10);
+        }
+    }, [messages, agentId]);
+
+    useEffect(() => {
+        scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (scrollRef.current) {
+                localStorage.setItem(`chat-scroll-${agentId}`, scrollRef.current.scrollTop.toString());
+            }
+        };
+
+        const scrollElement = scrollRef.current;
+        if (scrollElement) {
+            scrollElement.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (scrollElement) {
+                scrollElement.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [agentId]);
 
     const sendMessageMutation = useMutation({
         mutationKey: ["send_message", agentId],
@@ -258,22 +289,6 @@ export default function Page({ agentId }: { agentId: UUID }) {
             setSelectedFile(file);
         }
     };
-
-    const transition = useTransition(agentId, {
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 0 },
-        config: { duration: 150 },
-        immediate: true
-    });
-
-    const AnimatedMessages = animated(
-        ({ children, style }: { children: React.ReactNode; style: any }) => (
-            <div style={style} className="w-full">
-                {children}
-            </div>
-        )
-    );
 
     if (!user) {
         return (
@@ -374,136 +389,132 @@ export default function Page({ agentId }: { agentId: UUID }) {
                         scrollToBottom={scrollToBottom}
                         disableAutoScroll={disableAutoScroll}
                     >
-                        {transition((style) => (
-                            <AnimatedMessages key={agentId} style={style}>
-                                {messages.map((message: ContentWithUser) => {
-                                    const variant = getMessageVariant(message?.user);
-                                    return (
-                                        <div
-                                            key={`${message.createdAt}-${message.user}-${message.text}`}
-                                            className="flex flex-col py-2"
-                                        >
-                                            <ChatBubble
-                                                variant={variant}
-                                                className="flex flex-row items-start gap-2"
+                        {messages.map((message: ContentWithUser) => {
+                            const variant = getMessageVariant(message?.user);
+                            return (
+                                <div
+                                    key={`${message.createdAt}-${message.user}-${message.text}`}
+                                    className="flex flex-col py-2"
+                                >
+                                    <ChatBubble
+                                        variant={variant}
+                                        className="flex flex-row items-start gap-2"
+                                    >
+                                        {message?.user !== "user" ? (
+                                            <Avatar className="size-8 mt-1 border rounded-full select-none">
+                                                <AvatarImage src={`/agents/${agentId}/icon.png`} />
+                                                <AvatarFallback>
+                                                    <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        ) : null}
+                                        <div className="flex flex-col">
+                                            <ChatBubbleMessage
+                                                isLoading={message?.isLoading || message?.isTyping}
                                             >
                                                 {message?.user !== "user" ? (
-                                                    <Avatar className="size-8 mt-1 border rounded-full select-none">
-                                                        <AvatarImage src={`/agents/${agentId}/icon.png`} />
-                                                        <AvatarFallback>
-                                                            <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                ) : null}
-                                                <div className="flex flex-col">
-<ChatBubbleMessage
-    isLoading={message?.isLoading || message?.isTyping}
->
-                                                        {message?.user !== "user" ? (
-                                                            <div className="prose max-w-[600px]">
-                                                                <ReactMarkdown
-                                                                    components={{
-                                                                        a: ({ node, ...props }) => (
-                                                                            <a
-                                                                                {...props}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-primary hover:underline"
-                                                                            />
-                                                                        ),
-                                                                        p: ({ node, ...props }) => (
-                                                                            <p {...props} className="whitespace-pre-wrap my-0" />
-                                                                        ),
-                                                                        ul: ({ node, ...props }) => (
-                                                                            <ul {...props} className="my-1" />
-                                                                        ),
-                                                                        li: ({ node, ...props }) => (
-                                                                            <li {...props} className="my-0" />
-                                                                        ),
-                                                                        code: ({ inline, className, children, ...props }: any) => {
-                                                                            return inline ?
-                                                                                <code {...props} className="bg-muted px-1.5 py-0.5 rounded text-sm">
-                                                                                    {children}
-                                                                                </code> :
-                                                                                <code {...props} className="block bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                                                                                    {children}
-                                                                                </code>
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    {message?.text?.replace(/\\n/g, '\n').replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
-                                                                </ReactMarkdown>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="whitespace-pre-wrap block max-w-[600px] overflow-hidden">{message?.text}</span>
-                                                        )}
-                                                        <div>
-                                                            {message?.attachments?.map(
-                                                                (attachment: IAttachment) => (
-                                                                    <div
-                                                                        className="flex flex-col gap-1 mt-2"
-                                                                        key={`${attachment.url}-${attachment.title}`}
-                                                                    >
-                                                                        <img
-                                                                            alt="attachment"
-                                                                            src={attachment.url}
-                                                                            width="100%"
-                                                                            height="100%"
-                                                                            className="max-w-[600px] rounded-md"
-                                                                        />
-                                                                        <div className="flex items-center justify-between gap-4">
-                                                                            <span />
-                                                                            <span />
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </ChatBubbleMessage>
-                                                    <div className="flex items-center gap-4 justify-between w-full mt-1">
-                                                        {message?.text &&
-                                                        !message?.isLoading &&
-                                                        !message?.isTyping ? (
-                                                            <div className="flex items-center gap-1">
-                                                                <CopyButton text={message?.text} />
-                                                                <ChatTtsButton
-                                                                    agentId={agentId}
-                                                                    text={message?.text}
-                                                                />
-                                                            </div>
-                                                        ) : null}
-                                                        <div
-                                                            className={cn([
-                                                                message?.isLoading || message?.isTyping
-                                                                    ? "mt-2"
-                                                                    : "",
-                                                                "flex items-center justify-between gap-4 select-none",
-                                                            ])}
+                                                    <div className="prose max-w-[600px]">
+                                                        <ReactMarkdown
+                                                            components={{
+                                                                a: ({ node, ...props }) => (
+                                                                    <a
+                                                                        {...props}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-primary hover:underline"
+                                                                    />
+                                                                ),
+                                                                p: ({ node, ...props }) => (
+                                                                    <p {...props} className="whitespace-pre-wrap my-0" />
+                                                                ),
+                                                                ul: ({ node, ...props }) => (
+                                                                    <ul {...props} className="my-1" />
+                                                                ),
+                                                                li: ({ node, ...props }) => (
+                                                                    <li {...props} className="my-0" />
+                                                                ),
+                                                                code: ({ inline, className, children, ...props }: any) => {
+                                                                    return inline ?
+                                                                        <code {...props} className="bg-muted px-1.5 py-0.5 rounded text-sm">
+                                                                            {children}
+                                                                        </code> :
+                                                                        <code {...props} className="block bg-muted p-4 rounded-lg text-sm overflow-x-auto">
+                                                                            {children}
+                                                                        </code>
+                                                                }
+                                                            }}
                                                         >
-                                                            {message?.source ? (
-                                                                <Badge variant="outline">
-                                                                    {message.source}
-                                                                </Badge>
-                                                            ) : null}
-                                                            {message?.action ? (
-                                                                <Badge variant="outline">
-                                                                    {message.action}
-                                                                </Badge>
-                                                            ) : null}
-                                                            {message?.createdAt ? (
-                                                                <ChatBubbleTimestamp
-                                                                    timestamp={moment(message?.createdAt).format("LT")}
-                                                                />
-                                                            ) : null}
-                                                        </div>
+                                                            {message?.text?.replace(/\\n/g, '\n').replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
+                                                        </ReactMarkdown>
                                                     </div>
+                                                ) : (
+                                                    <span className="whitespace-pre-wrap block max-w-[600px] overflow-hidden">{message?.text}</span>
+                                                )}
+                                                <div>
+                                                    {message?.attachments?.map(
+                                                        (attachment: IAttachment) => (
+                                                            <div
+                                                                className="flex flex-col gap-1 mt-2"
+                                                                key={`${attachment.url}-${attachment.title}`}
+                                                            >
+                                                                <img
+                                                                    alt="attachment"
+                                                                    src={attachment.url}
+                                                                    width="100%"
+                                                                    height="100%"
+                                                                    className="max-w-[600px] rounded-md"
+                                                                />
+                                                                <div className="flex items-center justify-between gap-4">
+                                                                    <span />
+                                                                    <span />
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    )}
                                                 </div>
-                                            </ChatBubble>
+                                            </ChatBubbleMessage>
+                                            <div className="flex items-center gap-4 justify-between w-full mt-1">
+                                                {message?.text &&
+                                                !message?.isLoading &&
+                                                !message?.isTyping ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <CopyButton text={message?.text} />
+                                                        <ChatTtsButton
+                                                            agentId={agentId}
+                                                            text={message?.text}
+                                                        />
+                                                    </div>
+                                                ) : null}
+                                                <div
+                                                    className={cn([
+                                                        message?.isLoading || message?.isTyping
+                                                            ? "mt-2"
+                                                            : "",
+                                                        "flex items-center justify-between gap-4 select-none",
+                                                    ])}
+                                                >
+                                                    {message?.source ? (
+                                                        <Badge variant="outline">
+                                                            {message.source}
+                                                        </Badge>
+                                                    ) : null}
+                                                    {message?.action ? (
+                                                        <Badge variant="outline">
+                                                            {message.action}
+                                                        </Badge>
+                                                    ) : null}
+                                                    {message?.createdAt ? (
+                                                        <ChatBubbleTimestamp
+                                                            timestamp={moment(message?.createdAt).format("LT")}
+                                                        />
+                                                    ) : null}
+                                                </div>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </AnimatedMessages>
-                        ))}
+                                    </ChatBubble>
+                                </div>
+                            );
+                        })}
                     </ChatMessageList>
                 </ScrollArea>
             </div>
@@ -568,14 +579,14 @@ export default function Page({ agentId }: { agentId: UUID }) {
                         </Tooltip>
 
                         <div className="flex-1">
-<ChatInput
-    ref={inputRef}
-    onKeyDown={handleKeyDown}
-    value={input}
-    onChange={({ target }) => setInput(target.value)}
-    placeholder="Type a message"
-    className="min-h-10 resize-none rounded-full bg-muted px-4 py-2 shadow-none focus-visible:ring-0 overflow-y-auto"
-/>
+                            <ChatInput
+                                ref={inputRef}
+                                onKeyDown={handleKeyDown}
+                                value={input}
+                                onChange={({ target }) => setInput(target.value)}
+                                placeholder="Type a message"
+                                className="min-h-10 resize-none rounded-full bg-muted px-4 py-2 shadow-none focus-visible:ring-0 overflow-y-auto"
+                            />
                         </div>
 
                         {input ? (
