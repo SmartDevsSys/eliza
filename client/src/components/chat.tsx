@@ -17,6 +17,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useTransition, animated } from "@react-spring/web";
 import { Loader2, Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -125,7 +126,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll } = useAutoScroll({
         smooth: true,
     });
-   
+
     useEffect(() => {
         // Ensure messages are properly positioned when switching agents
         const messages = queryClient.getQueryData(["messages", agentId]);
@@ -211,11 +212,14 @@ export default function Page({ agentId }: { agentId: UUID }) {
         });
     };
 
+    const messages = queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) || [];
+
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
         }
-    }, []);
+        scrollToBottom();
+    }, [messages]);
 
     const sendMessageMutation = useMutation({
         mutationKey: ["send_message", agentId],
@@ -255,10 +259,6 @@ export default function Page({ agentId }: { agentId: UUID }) {
         }
     };
 
-    const messages =
-        queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) ||
-        [];
-
     const transition = useTransition(agentId, {
         from: { opacity: 0 },
         enter: { opacity: 1 },
@@ -297,7 +297,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
     }
 
     return (
-        <div className="flex flex-col w-full h-full">
+        <div className="flex flex-col w-full h-full overflow-y-auto">
             <div className="border-b bg-background">
                 <div className="flex items-center justify-between py-2.5 px-4">
                     <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                         </Button>
                                     </DialogClose>
                                     <DialogClose asChild>
-                                        <Button 
+                                        <Button
                                             variant="destructive"
                                             onClick={() => {
                                                 queryClient.setQueryData(["messages", agentId], []);
@@ -365,147 +365,149 @@ export default function Page({ agentId }: { agentId: UUID }) {
                     </div>
                 </div>
             </div>
-            
-            <div className="flex-1 overflow-y-auto px-4 py-4 relative">
-                <ChatMessageList 
-                    scrollRef={scrollRef}
-                    isAtBottom={isAtBottom}
-                    scrollToBottom={scrollToBottom}
-                    disableAutoScroll={disableAutoScroll}
-                >
-                    {transition((style) => (
-                        <AnimatedMessages key={agentId} style={style}>
-                            {messages.map((message: ContentWithUser) => {
-                                const variant = getMessageVariant(message?.user);
-                                return (
-                                    <div 
-                                        key={`${message.createdAt}-${message.user}-${message.text}`}
-                                        className="flex flex-col py-2"
-                                    >
-                                        <ChatBubble
-                                            variant={variant}
-                                            className="flex flex-row items-start gap-2"
+
+            <div className="flex-1 px-4 py-4 relative overflow-y-auto">
+                <ScrollArea className="h-full overflow-y-auto">
+                    <ChatMessageList
+                        scrollRef={scrollRef}
+                        isAtBottom={isAtBottom}
+                        scrollToBottom={scrollToBottom}
+                        disableAutoScroll={disableAutoScroll}
+                    >
+                        {transition((style) => (
+                            <AnimatedMessages key={agentId} style={style}>
+                                {messages.map((message: ContentWithUser) => {
+                                    const variant = getMessageVariant(message?.user);
+                                    return (
+                                        <div
+                                            key={`${message.createdAt}-${message.user}-${message.text}`}
+                                            className="flex flex-col py-2"
                                         >
-                                            {message?.user !== "user" ? (
-                                                <Avatar className="size-8 mt-1 border rounded-full select-none">
-                                                    <AvatarImage src={`/agents/${agentId}/icon.png`} />
-                                                    <AvatarFallback>
-                                                        <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                            ) : null}
-                                            <div className="flex flex-col">
-                                                <ChatBubbleMessage
-                                                    isLoading={message?.isLoading || message?.isTyping}
-                                                >
-                                                    {message?.user !== "user" ? (
-                                                        <div className="prose max-w-[600px]">
-                                                            <ReactMarkdown
-                                                                components={{
-                                                                    a: ({ node, ...props }) => (
-                                                                        <a
-                                                                            {...props}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="text-primary hover:underline"
-                                                                        />
-                                                                    ),
-                                                                    p: ({ node, ...props }) => (
-                                                                        <p {...props} className="whitespace-pre-wrap my-0" />
-                                                                    ),
-                                                                    ul: ({ node, ...props }) => (
-                                                                        <ul {...props} className="my-1" />
-                                                                    ),
-                                                                    li: ({ node, ...props }) => (
-                                                                        <li {...props} className="my-0" />
-                                                                    ),
-                                                                    code: ({ inline, className, children, ...props }: any) => {
-                                                                        return inline ? 
-                                                                            <code {...props} className="bg-muted px-1.5 py-0.5 rounded text-sm">
-                                                                                {children}
-                                                                            </code> :
-                                                                            <code {...props} className="block bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                                                                                {children}
-                                                                            </code>
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {message?.text?.replace(/\\n/g, '\n').replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
-                                                            </ReactMarkdown>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="whitespace-pre-wrap block max-w-[600px]">{message?.text}</span>
-                                                    )}
-                                                    <div>
-                                                        {message?.attachments?.map(
-                                                            (attachment: IAttachment) => (
-                                                                <div
-                                                                    className="flex flex-col gap-1 mt-2"
-                                                                    key={`${attachment.url}-${attachment.title}`}
+                                            <ChatBubble
+                                                variant={variant}
+                                                className="flex flex-row items-start gap-2"
+                                            >
+                                                {message?.user !== "user" ? (
+                                                    <Avatar className="size-8 mt-1 border rounded-full select-none">
+                                                        <AvatarImage src={`/agents/${agentId}/icon.png`} />
+                                                        <AvatarFallback>
+                                                            <img src="/elizaos-icon.png" alt="ElizaOS" className="w-full h-full object-cover" />
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                ) : null}
+                                                <div className="flex flex-col">
+<ChatBubbleMessage
+    isLoading={message?.isLoading || message?.isTyping}
+>
+                                                        {message?.user !== "user" ? (
+                                                            <div className="prose max-w-[600px]">
+                                                                <ReactMarkdown
+                                                                    components={{
+                                                                        a: ({ node, ...props }) => (
+                                                                            <a
+                                                                                {...props}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-primary hover:underline"
+                                                                            />
+                                                                        ),
+                                                                        p: ({ node, ...props }) => (
+                                                                            <p {...props} className="whitespace-pre-wrap my-0" />
+                                                                        ),
+                                                                        ul: ({ node, ...props }) => (
+                                                                            <ul {...props} className="my-1" />
+                                                                        ),
+                                                                        li: ({ node, ...props }) => (
+                                                                            <li {...props} className="my-0" />
+                                                                        ),
+                                                                        code: ({ inline, className, children, ...props }: any) => {
+                                                                            return inline ?
+                                                                                <code {...props} className="bg-muted px-1.5 py-0.5 rounded text-sm">
+                                                                                    {children}
+                                                                                </code> :
+                                                                                <code {...props} className="block bg-muted p-4 rounded-lg text-sm overflow-x-auto">
+                                                                                    {children}
+                                                                                </code>
+                                                                        }
+                                                                    }}
                                                                 >
-                                                                    <img
-                                                                        alt="attachment"
-                                                                        src={attachment.url}
-                                                                        width="100%"
-                                                                        height="100%"
-                                                                        className="max-w-[600px] rounded-md"
-                                                                    />
-                                                                    <div className="flex items-center justify-between gap-4">
-                                                                        <span />
-                                                                        <span />
-                                                                    </div>
-                                                                </div>
-                                                            )
+                                                                    {message?.text?.replace(/\\n/g, '\n').replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
+                                                                </ReactMarkdown>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="whitespace-pre-wrap block max-w-[600px] overflow-hidden">{message?.text}</span>
                                                         )}
-                                                    </div>
-                                                </ChatBubbleMessage>
-                                                <div className="flex items-center gap-4 justify-between w-full mt-1">
-                                                    {message?.text &&
-                                                    !message?.isLoading &&
-                                                    !message?.isTyping ? (
-                                                        <div className="flex items-center gap-1">
-                                                            <CopyButton text={message?.text} />
-                                                            <ChatTtsButton
-                                                                agentId={agentId}
-                                                                text={message?.text}
-                                                            />
+                                                        <div>
+                                                            {message?.attachments?.map(
+                                                                (attachment: IAttachment) => (
+                                                                    <div
+                                                                        className="flex flex-col gap-1 mt-2"
+                                                                        key={`${attachment.url}-${attachment.title}`}
+                                                                    >
+                                                                        <img
+                                                                            alt="attachment"
+                                                                            src={attachment.url}
+                                                                            width="100%"
+                                                                            height="100%"
+                                                                            className="max-w-[600px] rounded-md"
+                                                                        />
+                                                                        <div className="flex items-center justify-between gap-4">
+                                                                            <span />
+                                                                            <span />
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            )}
                                                         </div>
-                                                    ) : null}
-                                                    <div
-                                                        className={cn([
-                                                            message?.isLoading || message?.isTyping
-                                                                ? "mt-2"
-                                                                : "",
-                                                            "flex items-center justify-between gap-4 select-none",
-                                                        ])}
-                                                    >
-                                                        {message?.source ? (
-                                                            <Badge variant="outline">
-                                                                {message.source}
-                                                            </Badge>
+                                                    </ChatBubbleMessage>
+                                                    <div className="flex items-center gap-4 justify-between w-full mt-1">
+                                                        {message?.text &&
+                                                        !message?.isLoading &&
+                                                        !message?.isTyping ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <CopyButton text={message?.text} />
+                                                                <ChatTtsButton
+                                                                    agentId={agentId}
+                                                                    text={message?.text}
+                                                                />
+                                                            </div>
                                                         ) : null}
-                                                        {message?.action ? (
-                                                            <Badge variant="outline">
-                                                                {message.action}
-                                                            </Badge>
-                                                        ) : null}
-                                                        {message?.createdAt ? (
-                                                            <ChatBubbleTimestamp
-                                                                timestamp={moment(message?.createdAt).format("LT")}
-                                                            />
-                                                        ) : null}
+                                                        <div
+                                                            className={cn([
+                                                                message?.isLoading || message?.isTyping
+                                                                    ? "mt-2"
+                                                                    : "",
+                                                                "flex items-center justify-between gap-4 select-none",
+                                                            ])}
+                                                        >
+                                                            {message?.source ? (
+                                                                <Badge variant="outline">
+                                                                    {message.source}
+                                                                </Badge>
+                                                            ) : null}
+                                                            {message?.action ? (
+                                                                <Badge variant="outline">
+                                                                    {message.action}
+                                                                </Badge>
+                                                            ) : null}
+                                                            {message?.createdAt ? (
+                                                                <ChatBubbleTimestamp
+                                                                    timestamp={moment(message?.createdAt).format("LT")}
+                                                                />
+                                                            ) : null}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </ChatBubble>
-                                    </div>
-                                );
-                            })}
-                        </AnimatedMessages>
-                    ))}
-                </ChatMessageList>
+                                            </ChatBubble>
+                                        </div>
+                                    );
+                                })}
+                            </AnimatedMessages>
+                        ))}
+                    </ChatMessageList>
+                </ScrollArea>
             </div>
-            <div className="border-t bg-background">
+            <div className="border-t bg-background sticky bottom-0">
                 <form
                     ref={formRef}
                     onSubmit={handleSendMessage}
@@ -566,14 +568,14 @@ export default function Page({ agentId }: { agentId: UUID }) {
                         </Tooltip>
 
                         <div className="flex-1">
-                            <ChatInput
-                                ref={inputRef}
-                                onKeyDown={handleKeyDown}
-                                value={input}
-                                onChange={({ target }) => setInput(target.value)}
-                                placeholder="Type a message"
-                                className="min-h-10 resize-none rounded-full bg-muted px-4 py-2 shadow-none focus-visible:ring-0"
-                            />
+<ChatInput
+    ref={inputRef}
+    onKeyDown={handleKeyDown}
+    value={input}
+    onChange={({ target }) => setInput(target.value)}
+    placeholder="Type a message"
+    className="min-h-10 resize-none rounded-full bg-muted px-4 py-2 shadow-none focus-visible:ring-0 overflow-y-auto"
+/>
                         </div>
 
                         {input ? (

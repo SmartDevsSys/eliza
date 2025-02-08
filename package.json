@@ -72,6 +72,7 @@
     "@coinbase/coinbase-sdk": "0.10.0",
     "@deepgram/sdk": "^3.9.0",
     "@injectivelabs/sdk-ts": "^1.14.33",
+    "@shadcn/ui": "^0.0.4",
     "@vitest/eslint-plugin": "1.0.1",
     "amqplib": "0.10.5",
     "bs58": "4.0.0",

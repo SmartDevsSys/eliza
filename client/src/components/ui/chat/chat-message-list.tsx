@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect } from "react";
 import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,12 @@ interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
     ({ className, children, scrollRef, isAtBottom, scrollToBottom, disableAutoScroll, ...props }) => {
+        useEffect(() => {
+            if (isAtBottom && !disableAutoScroll) {
+                scrollToBottom();
+            }
+        }, [children, isAtBottom, disableAutoScroll, scrollToBottom]);
+
         return (
             <div className="relative w-full h-full">
                 <div

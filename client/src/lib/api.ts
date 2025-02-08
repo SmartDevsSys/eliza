@@ -1,7 +1,7 @@
 import type { UUID, Character } from "@elizaos/core";
 import { getOrCreateRoom, saveMessage, getRoomMessages, supabase } from "./supabase";
 
-const BASE_URL = `https://apibabythink-production.up.railway.app`;
+const BASE_URL = `https://3000-smartdevssys-eliza-n3xnu3i6wzk.ws-eu117.gitpod.io`;
 
 const fetcher = async ({
     url,
