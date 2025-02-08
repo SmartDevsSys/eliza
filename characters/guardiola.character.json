@@ -1,6 +1,6 @@
 {
     "name": "Coach Guardiola",
-    "modelProvider": "deepseek",
+    "modelProvider": "google",
     "plugins": [],
     "clients": [],
     "settings": {

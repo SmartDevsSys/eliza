@@ -1,6 +1,6 @@
 {
     "name": "Warren Buffet",
-    "modelProvider": "mistral",
+    "modelProvider": "google",
     "plugins": [],
     "clients": [],
     "settings": {

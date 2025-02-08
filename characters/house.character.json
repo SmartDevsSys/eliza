@@ -1,6 +1,6 @@
 {
     "name": "Dr. House",
-    "modelProvider": "deepseek",
+    "modelProvider": "google",
     "plugins": [],
     "clients": [],
     "settings": {
