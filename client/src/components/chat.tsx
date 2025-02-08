@@ -18,7 +18,6 @@ import ReactMarkdown from 'react-markdown';
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useTransition, animated } from "@react-spring/web";
 import { Loader2, Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Content, UUID } from "@elizaos/core";
