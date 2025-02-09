@@ -16,12 +16,6 @@
     "lore": [
         "Test agent for verifying knowledge directory usage."
     ],
-    "knowledge": [
-        {
-            "path": "characters/knowledge/shared/droits.pdf",
-            "shared": true
-        }
-    ],
     "messageExamples": [],
     "postExamples": [],
     "topics": [],
