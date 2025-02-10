@@ -101,7 +101,7 @@ export function CreateAIAgent({ onSuccess, initialAgent, isEditing = false }: Cr
                 const fileExt = logo.name.split('.').pop();
                 const fileName = `${formData.get('name')}-${Date.now()}.${fileExt}`;
                 
-                const { data: logoData, error: logoError } = await supabase.storage
+                const { error: logoError } = await supabase.storage
                     .from('agent-logos')
                     .upload(fileName, logo, {
                         contentType: logo.type,

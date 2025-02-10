@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { supabase, getUserAIAgents, type AIAgent } from "@/lib/supabase";
+import { supabase, getUserAIAgents } from "@/lib/supabase";
 import { LogOut, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
