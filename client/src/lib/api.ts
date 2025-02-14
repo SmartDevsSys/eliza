@@ -1,6 +1,6 @@
 import type { UUID, Character } from "@elizaos/core";
 
-const BASE_URL = `http://localhost:${import.meta.env.VITE_SERVER_PORT}`;
+const BASE_URL = `https://3000-smartdevssys-eliza-qini03ztx35.ws-eu117.gitpod.io`;
 
 const fetcher = async ({
     url,

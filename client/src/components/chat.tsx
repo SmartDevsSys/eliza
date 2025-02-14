@@ -10,7 +10,7 @@ import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Content, UUID } from "@elizaos/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
@@ -45,6 +45,11 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const formRef = useRef<HTMLFormElement>(null);
 
     const queryClient = useQueryClient();
+    
+    const agentQuery = useQuery({
+        queryKey: ["agent", agentId],
+        queryFn: () => apiClient.getAgent(agentId),
+    });
 
     const getMessageVariant = (role: string) =>
         role !== "user" ? "received" : "sent";
@@ -196,8 +201,8 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                     className="flex flex-row items-center gap-2"
                                 >
                                     {message?.user !== "user" ? (
-                                        <Avatar className="size-8 p-1 border rounded-full select-none">
-                                            <AvatarImage src="/elizaos-icon.png" />
+                                        <Avatar className="size-12 p-1 border rounded-full select-none">
+                                            <AvatarImage src={`/${agentQuery.data?.character.name.toLowerCase()}.png`} />
                                         </Avatar>
                                     ) : null}
                                     <div className="flex flex-col">

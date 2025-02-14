@@ -16,7 +16,6 @@ import {
 import { apiClient } from "@/lib/api";
 import { NavLink, useLocation } from "react-router";
 import type { UUID } from "@elizaos/core";
-import { Book, Cog, User } from "lucide-react";
 import ConnectionStatus from "./connection-status";
 
 export function AppSidebar() {
@@ -46,7 +45,7 @@ export function AppSidebar() {
 
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">
-                                        ElizaOS
+                                        AI agents
                                     </span>
                                     <span className="">v{info?.version}</span>
                                 </div>
@@ -83,7 +82,11 @@ export function AppSidebar() {
                                                             agent.id
                                                         )}
                                                     >
-                                                        <User />
+                                                        <img
+                                                            src={`/${agent.name.toLowerCase()}.png`}
+                                                            alt={`${agent.name} logo`}
+                                                            className="size-6"
+                                                        />
                                                         <span>
                                                             {agent.name}
                                                         </span>
@@ -100,24 +103,8 @@ export function AppSidebar() {
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <NavLink
-                            to="https://elizaos.github.io/eliza/docs/intro/"
-                            target="_blank"
-                        >
-                            <SidebarMenuButton>
-                                <Book /> Documentation
-                            </SidebarMenuButton>
-                        </NavLink>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton disabled>
-                            <Cog /> Settings
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
                     <ConnectionStatus />
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
-    );
-}
+    )};
