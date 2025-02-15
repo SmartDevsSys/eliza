@@ -3,7 +3,7 @@
   "clients": [
     "telegram"
   ],
-  "modelProvider": "deepseek",
+  "modelProvider": "anthropic",
   "settings": {
     "secrets": {},
     "voice": {
