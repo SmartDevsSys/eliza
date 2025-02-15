@@ -1,6 +1,6 @@
 {
   "name": "Jean",
-  "clients": ["telegram"],
+  "clients": [],
   "modelProvider": "mistral",
   "settings": {
     "secrets": {},
