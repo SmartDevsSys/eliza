@@ -1,7 +1,7 @@
 {
   "name": "Marie",
   "clients": [],
-  "modelProvider": "mistral",
+  "modelProvider": "deepseek",
   "settings": {
     "secrets": {},
     "voice": {

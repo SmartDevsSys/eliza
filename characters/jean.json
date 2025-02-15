@@ -1,7 +1,7 @@
 {
   "name": "Jean",
   "clients": ["telegram"],
-  "modelProvider": "mistral",
+  "modelProvider": "deepseek",
   "settings": {
     "secrets": {},
     "voice": {
