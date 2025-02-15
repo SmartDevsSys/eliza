@@ -43,9 +43,7 @@ export default defineConfig(({ mode }) => {
                 clientPort: 443,
                 protocol: 'wss'
             },
-            allowedHosts: [
-                'ui-production-e540.up.railway.app'
-            ]
+            allowedHosts: true
         },
     };
 });
