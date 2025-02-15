@@ -1,6 +1,6 @@
 import type { UUID, Character } from "@elizaos/core";
 
-const BASE_URL = `https://3000-smartdevssys-eliza-qini03ztx35.ws-eu117.gitpod.io`;
+const BASE_URL = `https://api-production-4305.up.railway.app`;
 
 const fetcher = async ({
     url,
