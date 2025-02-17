@@ -1,9 +1,8 @@
 {
   "name": "Marine",
   "clients": [
-    "telegram"
   ],
-  "modelProvider": "anthropic",
+  "modelProvider": "deepseek",
   "settings": {
     "secrets": {},
     "voice": {
