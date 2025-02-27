@@ -41,5 +41,10 @@ export default defineConfig(({ mode }) => {
                 "@": "/src",
             },
         },
+        server: {
+            allowedHosts: [
+                "eliza-production-8aec.up.railway.app"
+            ]
+        }
     };
 });
