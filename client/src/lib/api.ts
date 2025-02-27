@@ -1,8 +1,6 @@
 import type { UUID, Character } from "@elizaos/core";
 
-const BASE_URL =
-    import.meta.env.VITE_SERVER_BASE_URL ||
-    `${import.meta.env.VITE_SERVER_URL}:${import.meta.env.VITE_SERVER_PORT}`;
+const BASE_URL =`https://api-production-a46e.up.railway.app`;
 
 console.log({ BASE_URL });
 
