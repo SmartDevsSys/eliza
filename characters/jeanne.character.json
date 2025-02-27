@@ -1,7 +1,7 @@
 {
     "name": "Jeanne",
     "clients": [],
-    "modelProvider": "mistral",
+    "modelProvider": "deepseek",
     "plugins": [
       "@elizaos-plugins/plugin-datarennes"
     ],
