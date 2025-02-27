@@ -57,23 +57,33 @@ const fetchElectionAction: Action = {
                 case 'CANDIDATE_VOTES_CONCISE':
                     return formatCandidateVotesConcise(results, params.candidate);
                 case 'CANDIDATE_VOTES':
-                    return formatCandidateVotes(results, params.candidate);
+                    return formatCandidateVotesConcise(results, params.candidate);
                 case 'PARTICIPATION_RATE':
                     return formatParticipationRate(results);
                 case 'WINNER':
                     return formatWinner(results);
                 case 'BUREAU_RESULTS':
-                    return formatBureauResults(results);
+                    return formatBureauResultsConcise(results);
                 case 'COMMUNE_RESULTS':
-                    return formatCommuneResults(results);
+                    return formatCommuneResultsConcise(results);
                 case 'CANDIDATE_COMPARISON':
                     return formatCandidateComparison(results, params);
+                case 'LIST_CANDIDATES':
+                    return formatCandidatesList(results);
                 default:
                     return formatDetailedResults(results);
             }
         }
         
         function determineQueryType(params: any): string {
+            // Check for list candidates request
+            if (params.specificRequest && 
+                (params.specificRequest.toLowerCase().includes('liste') || 
+                 params.specificRequest.toLowerCase().includes('tous les candidats') ||
+                 params.specificRequest.toLowerCase().includes('tout les candidats'))) {
+                return 'LIST_CANDIDATES';
+            }
+            
             // Check for very specific queries first (candidate + bureau)
             if (params.candidate && params.bureau) {
                 return 'CANDIDATE_BUREAU_SPECIFIC';
@@ -103,7 +113,7 @@ const fetchElectionAction: Action = {
                 if (params.candidate.includes(',') || params.candidate.includes(' et ') || params.candidate.includes(' and ')) {
                     return 'CANDIDATE_COMPARISON';
                 }
-                return 'CANDIDATE_VOTES';
+                return 'CANDIDATE_VOTES_CONCISE';
             }
             
             // Check for bureau-specific queries
@@ -120,6 +130,26 @@ const fetchElectionAction: Action = {
             return 'DETAILED_RESULTS';
         }
         
+        function formatCandidatesList(results: any[]): string {
+            if (results.length === 0) {
+                return "Aucun résultat trouvé.";
+            }
+            
+            // Get the first result to extract candidate names
+            const result = results[0];
+            const candidates = [];
+            
+            // Extract all candidate names
+            for (let i = 1; i <= 38; i++) {
+                const candidateName = result[`candidat_${i}`];
+                if (candidateName) {
+                    candidates.push(candidateName);
+                }
+            }
+            
+            return `Liste des candidats aux élections européennes 2024:\n\n${candidates.join('\n')}`;
+        }
+        
         function formatCandidateBureauSpecific(results: any[], candidateName: string, bureauName: string): string {
             if (results.length === 0) {
                 return `Aucun résultat trouvé pour ${candidateName} au bureau ${bureauName}.`;
@@ -127,24 +157,33 @@ const fetchElectionAction: Action = {
             
             // Find the candidate in each result
             for (const result of results) {
+                // Check if this is the right bureau
+                if (!result.nom_lieu || !bureauName) continue;
+                
                 if (result.nom_lieu.toLowerCase().includes(bureauName.toLowerCase()) || 
                     result.numero_lieu === bureauName) {
                     
+                    // Find the candidate
                     for (let i = 1; i <= 38; i++) {
                         const currentName = result[`candidat_${i}`];
-                        if (currentName && currentName.toLowerCase().includes(candidateName.toLowerCase())) {
+                        if (!currentName || !candidateName) continue;
+                        
+                        if (currentName.toLowerCase().includes(candidateName.toLowerCase())) {
                             const votes = result[`nb_voix_${i}`];
                             const percentage = result[`pourcentage_${i}`];
                             
                             if (votes !== undefined && percentage !== undefined) {
-                                return `Au bureau de vote ${result.nom_lieu} (${result.numero_lieu}), ${currentName} a obtenu **${votes} voix** (${percentage}%).`;
+                                return `${currentName} a obtenu **${votes} voix** (${percentage}%) au bureau de vote ${result.nom_lieu} (${result.numero_lieu}).`;
                             }
                         }
                     }
+                    
+                    // If we found the bureau but not the candidate
+                    return `Aucun résultat trouvé pour ${candidateName} au bureau ${result.nom_lieu} (${result.numero_lieu}).`;
                 }
             }
             
-            return `Aucun résultat trouvé pour ${candidateName} au bureau ${bureauName}.`;
+            return `Aucun bureau de vote correspondant à "${bureauName}" n'a été trouvé.`;
         }
         
         function formatCandidateVotesConcise(results: any[], candidateName: string): string {
@@ -155,44 +194,7 @@ const fetchElectionAction: Action = {
             let totalVotes = 0;
             let totalPercentage = 0;
             let count = 0;
-            
-            // Process each result
-            results.forEach(result => {
-                // Find the candidate in this result
-                for (let i = 1; i <= 38; i++) {
-                    const currentName = result[`candidat_${i}`];
-                    if (currentName && currentName.toLowerCase().includes(candidateName.toLowerCase())) {
-                        const votes = result[`nb_voix_${i}`];
-                        const percentage = result[`pourcentage_${i}`];
-                        
-                        if (votes !== undefined && percentage !== undefined) {
-                            totalVotes += votes;
-                            totalPercentage += percentage;
-                            count++;
-                        }
-                    }
-                }
-            });
-            
-            if (count === 0) {
-                return `Aucun résultat trouvé pour ${candidateName}.`;
-            }
-            
-            // Format the response
-            const avgPercentage = (totalPercentage / count).toFixed(2);
-            
-            return `${candidateName} a obtenu un total de **${totalVotes} voix** (${avgPercentage}% en moyenne) sur ${count} bureaux de vote.`;
-        }
-        
-        function formatCandidateVotes(results: any[], candidateName: string): string {
-            if (results.length === 0) {
-                return `Aucun résultat trouvé pour ${candidateName}.`;
-            }
-            
-            let totalVotes = 0;
-            let totalPercentage = 0;
-            let count = 0;
-            const detailedResults = [];
+            const bureauResults = [];
             
             // Process each result
             results.forEach(result => {
@@ -208,8 +210,7 @@ const fetchElectionAction: Action = {
                             totalPercentage += percentage;
                             count++;
                             
-                            detailedResults.push({
-                                commune: result.libelle_commune,
+                            bureauResults.push({
                                 bureau: result.nom_lieu,
                                 numero: result.numero_lieu,
                                 votes: votes,
@@ -227,26 +228,14 @@ const fetchElectionAction: Action = {
             // Format the response
             const avgPercentage = (totalPercentage / count).toFixed(2);
             
-            // Limit the number of detailed results to show
-            const maxDetailedResults = 3;
-            const limitedDetails = detailedResults.slice(0, maxDetailedResults);
-            
-            let response = `${candidateName} a obtenu un total de **${totalVotes} voix** (${avgPercentage}% en moyenne).\n`;
-            
-            if (detailedResults.length > 1 && detailedResults.length <= maxDetailedResults) {
-                response += `\nDétail par bureau de vote:\n`;
-                limitedDetails.forEach(detail => {
-                    response += `- ${detail.bureau} (${detail.numero}): ${detail.votes} voix (${detail.percentage}%)\n`;
-                });
-            } else if (detailedResults.length > maxDetailedResults) {
-                response += `\nTop ${maxDetailedResults} bureaux de vote:\n`;
-                limitedDetails.forEach(detail => {
-                    response += `- ${detail.bureau} (${detail.numero}): ${detail.votes} voix (${detail.percentage}%)\n`;
-                });
-                response += `\n*${detailedResults.length - maxDetailedResults} autres bureaux non affichés*`;
+            if (bureauResults.length === 1) {
+                // If only one bureau, return a simple result
+                const bureau = bureauResults[0];
+                return `${candidateName} a obtenu **${bureau.votes} voix** (${bureau.percentage}%) au bureau ${bureau.bureau} (${bureau.numero}).`;
+            } else {
+                // If multiple bureaux, return a summary
+                return `${candidateName} a obtenu un total de **${totalVotes} voix** (${avgPercentage}% en moyenne) sur ${count} bureaux de vote.`;
             }
-            
-            return response;
         }
         
         function formatParticipationRate(results: any[]): string {
@@ -294,7 +283,6 @@ const fetchElectionAction: Action = {
                 }
                 
                 return {
-                    commune: result.libelle_commune,
                     bureau: result.nom_lieu,
                     numero: result.numero_lieu,
                     winner: winnerName,
@@ -306,7 +294,7 @@ const fetchElectionAction: Action = {
             // Format the response
             if (winners.length === 1) {
                 const winner = winners[0];
-                return `À ${winner.bureau} (${winner.numero}), le vainqueur est **${winner.winner}** avec ${winner.votes} voix (${winner.percentage}%)`;
+                return `Au bureau ${winner.bureau} (${winner.numero}), le vainqueur est **${winner.winner}** avec ${winner.votes} voix (${winner.percentage}%)`;
             } else {
                 // Count overall winners
                 const winnerCounts = {};
@@ -328,7 +316,7 @@ const fetchElectionAction: Action = {
             }
         }
         
-        function formatBureauResults(results: any[]): string {
+        function formatBureauResultsConcise(results: any[]): string {
             if (results.length === 0) {
                 return "Aucun résultat trouvé pour ce bureau de vote.";
             }
@@ -343,7 +331,7 @@ const fetchElectionAction: Action = {
                 const votes = result[`nb_voix_${i}`];
                 const percentage = result[`pourcentage_${i}`];
                 
-                if (candidateName && votes !== undefined && percentage !== undefined) {
+                if (candidateName && votes !== undefined && percentage !== undefined && votes > 0) {
                     candidateResults.push({
                         name: candidateName,
                         votes: votes,
@@ -355,21 +343,20 @@ const fetchElectionAction: Action = {
             // Sort by votes (descending)
             candidateResults.sort((a, b) => b.votes - a.votes);
             
-            // Format the response
-            let response = `Bureau de vote: **${result.nom_lieu}** (${result.numero_lieu})\n`;
-            response += `Participation: ${result.pourcentage_participation?.toFixed(2) || '?'}%\n\n`;
+            // Format the response - just top 3 candidates
+            let response = `Bureau ${result.nom_lieu} (${result.numero_lieu}): `;
             
-            // Add top 5 candidates with emphasis
-            response += `**Top 5 candidats:**\n`;
-            for (let i = 0; i < Math.min(5, candidateResults.length); i++) {
-                const candidate = candidateResults[i];
-                response += `${i+1}. **${candidate.name}**: ${candidate.votes} voix (${candidate.percentage}%)\n`;
+            if (candidateResults.length > 0) {
+                const top3 = candidateResults.slice(0, 3);
+                response += top3.map(c => `${c.name}: ${c.votes} voix (${c.percentage}%)`).join(' | ');
+            } else {
+                response += "Aucun résultat disponible";
             }
             
             return response;
         }
         
-        function formatCommuneResults(results: any[]): string {
+        function formatCommuneResultsConcise(results: any[]): string {
             if (results.length === 0) {
                 return "Aucun résultat trouvé pour cette commune.";
             }
@@ -408,17 +395,17 @@ const fetchElectionAction: Action = {
                     name,
                     votes: data.votes,
                     percentage: totalVotes > 0 ? (data.votes / totalVotes * 100).toFixed(2) : 0,
-                    bureaux: data.bureaux
                 }))
                 .sort((a, b) => b.votes - a.votes);
             
-            // Format the response
-            let response = `Résultats à **${commune}** (${results.length} bureaux de vote)\n\n`;
+            // Format the response - just top 3 candidates
+            let response = `Résultats à ${commune}: `;
             
-            response += `**Top 5 candidats:**\n`;
-            for (let i = 0; i < Math.min(5, sortedCandidates.length); i++) {
-                const candidate = sortedCandidates[i];
-                response += `${i+1}. **${candidate.name}**: ${candidate.votes} voix (${candidate.percentage}%)\n`;
+            if (sortedCandidates.length > 0) {
+                const top3 = sortedCandidates.slice(0, 3);
+                response += top3.map(c => `${c.name}: ${c.votes} voix (${c.percentage}%)`).join(' | ');
+            } else {
+                response += "Aucun résultat disponible";
             }
             
             return response;
@@ -471,29 +458,14 @@ const fetchElectionAction: Action = {
                 .map(([name, data]: [string, any]) => ({
                     name,
                     votes: data.votes,
-                    bureaux: data.bureaux,
                     avgPercentage: (data.totalPercentage / data.bureaux).toFixed(2)
                 }))
                 .sort((a, b) => b.votes - a.votes);
             
             // Format the response
-            let response = `**Comparaison des candidats:**\n\n`;
+            const comparisons = sortedCandidates.map(c => `${c.name}: ${c.votes} voix (${c.avgPercentage}%)`).join(' | ');
             
-            // Create comparison table
-            sortedCandidates.forEach(candidate => {
-                response += `**${candidate.name}**: ${candidate.votes} voix (${candidate.avgPercentage}%)\n`;
-            });
-            
-            // Add winner statement
-            if (sortedCandidates.length > 1) {
-                const winner = sortedCandidates[0];
-                const runnerUp = sortedCandidates[1];
-                const difference = winner.votes - runnerUp.votes;
-                
-                response += `\n**${winner.name}** devance **${runnerUp.name}** de ${difference} voix.`;
-            }
-            
-            return response;
+            return `Comparaison: ${comparisons}`;
         }
         
         function formatDetailedResults(results: any[]): string {
@@ -502,9 +474,9 @@ const fetchElectionAction: Action = {
             }
             
             // For detailed results, limit to a reasonable number
-            const limitedResults = results.slice(0, 2);
+            const limitedResults = results.slice(0, 1);
             
-            const formattedResults = limitedResults.map((result, index) => {
+            const formattedResults = limitedResults.map(result => {
                 // Extract candidate results
                 const candidateResults = [];
                 for (let i = 1; i <= 38; i++) {
@@ -512,7 +484,7 @@ const fetchElectionAction: Action = {
                     const votes = result[`nb_voix_${i}`];
                     const percentage = result[`pourcentage_${i}`];
                     
-                    if (candidateName && votes !== undefined && percentage !== undefined) {
+                    if (candidateName && votes !== undefined && percentage !== undefined && votes > 0) {
                         candidateResults.push({
                             name: candidateName,
                             votes: votes,
@@ -525,41 +497,26 @@ const fetchElectionAction: Action = {
                 candidateResults.sort((a, b) => b.votes - a.votes);
                 
                 // Format basic information
-                let response = `Bureau de vote: **${result.nom_lieu}** (${result.numero_lieu})\n`;
-                response += `Participation: ${result.pourcentage_participation?.toFixed(2) || '?'}%\n\n`;
+                let response = `Bureau ${result.nom_lieu} (${result.numero_lieu}): `;
                 
-                // Format top 5 candidates
-                response += `**Top 5 candidats:**\n`;
-                for (let i = 0; i < Math.min(5, candidateResults.length); i++) {
-                    const candidate = candidateResults[i];
-                    response += `${i+1}. **${candidate.name}**: ${candidate.votes} voix (${candidate.percentage}%)\n`;
+                // Format top 3 candidates
+                if (candidateResults.length > 0) {
+                    const top3 = candidateResults.slice(0, 3);
+                    response += top3.map(c => `${c.name}: ${c.votes} voix (${c.percentage}%)`).join(' | ');
+                } else {
+                    response += "Aucun résultat disponible";
                 }
                 
                 return response;
             });
             
-            let response = formattedResults.join('\n\n');
+            let response = formattedResults.join('\n');
             
-            if (results.length > 2) {
-                response += `\n\n*${results.length - 2} autres résultats trouvés. Posez une question plus spécifique pour des résultats plus précis.*`;
+            if (results.length > 1) {
+                response += `\n\n*${results.length - 1} autres résultats trouvés. Posez une question plus spécifique pour des résultats plus précis.*`;
             }
             
             return response;
-        }
-        
-        function formatDate(dateString: string | undefined) {
-            if (!dateString) return 'Inconnue';
-            
-            try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('fr-FR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } catch (e) {
-                return dateString;
-            }
         }
         
         // Extract query parameters from the user's message
@@ -570,7 +527,7 @@ const fetchElectionAction: Action = {
         1. Commune name (e.g., "Rennes", "Saint-Jacques-de-la-Lande")
         2. Bureau de vote or polling station number/name (e.g., "bureau 115", "Collège Echange", "Gymnase Lesseps")
         3. Candidate name (e.g., "Glucksmann", "Bardella", "Hayer", "Valérie Hayer")
-        4. Any specific request like "participation rate", "turnout", "winner", "votes", "score", etc.
+        4. Any specific request like "participation rate", "turnout", "winner", "votes", "score", "liste des candidats", etc.
         
         Format your response as JSON:
         {
@@ -729,6 +686,16 @@ const fetchElectionAction: Action = {
             {
                 user: "{{user1}}",
                 content: { text: "Dans Gymnase Lesseps donne-moi le résultat de Mme HAYER Valérie" },
+            },
+            {
+                user: "{{user2}}",
+                content: { text: "", action: "FETCH_ELECTION" },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: { text: "Donne-moi la liste des candidats aux élections européennes" },
             },
             {
                 user: "{{user2}}",
