@@ -31,7 +31,7 @@ const fetchElectionAction: Action = {
   similes: ["ELECTION_DATA", "GET_ELECTION_RESULTS", "ELECTION_RESULTS", "VOTING_RESULTS"],
   validate: async (_runtime: IAgentRuntime, _message: Memory) => true,
   description:
-    "Récupère les résultats électoraux depuis l'API open data de Rennes Metropole. Permet de filtrer par commune, bureau de vote, candidat et de répondre à des requêtes spécifiques.",
+    "Récupère les résultats électoraux depuis l'API open data de Rennes Metropole. Permet de filtrer par commune, bureau de vote et candidat.",
   handler: async (
     _runtime: IAgentRuntime,
     _message: Memory,
@@ -67,7 +67,7 @@ Extrais STRICTEMENT les informations suivantes en renvoyant uniquement un JSON s
 - "candidate" : le nom du candidat (ex: "Maréchal Marion")
 - "specificRequest" : une requête spécifique (ex: "taux de participation", "gagnant", "liste des candidats")
 Exemple de réponse EXACTE :
-{"commune": "rennes", "bureau": "groupe scolaire jules isaac", "candidate": null, "specificRequest": "taux de participation"}
+{"commune": "rennes", "bureau": "groupe scolaire jules isaac", "candidate": "maréchal marion", "specificRequest": null}
 `;
     const extractedParamsTextRaw = await generateText({
       runtime: _runtime,
@@ -116,20 +116,12 @@ Exemple de réponse EXACTE :
       }
     }
 
-    // Traitement des requêtes spécifiques
+    // Traitement pour le cas candidat + bureau
     let responseText = "";
-    if (params.specificRequest && params.bureau) {
-      switch (params.specificRequest) {
-        case "taux de participation":
-          responseText = getParticipationRate(filteredResults, params.bureau);
-          break;
-        default:
-          responseText = `Désolé, la requête "${params.specificRequest}" n'est pas encore prise en charge.`;
-      }
-    } else if (params.candidate && params.bureau) {
+    if (params.candidate && params.bureau) {
       responseText = getCandidateInBureau(filteredResults, params.candidate, params.bureau);
     } else {
-      responseText = "Désolé, cette fonctionnalité n'est implémentée que pour le filtrage candidat + bureau ou des requêtes spécifiques comme le taux de participation.";
+      responseText = "Désolé, cette fonctionnalité n'est implémentée que pour le filtrage candidat + bureau.";
     }
 
     const newMemory: Memory = {
@@ -148,16 +140,33 @@ Exemple de réponse EXACTE :
     _callback(newMemory.content);
     return true;
 
-    // --- Fonction pour le taux de participation ---
-    function getParticipationRate(results: any[], bureauQuery: string): string {
-      const bureauResults = results.find((result) =>
-        normalize(result.nom_lieu).includes(normalize(bureauQuery))
-      );
-      if (!bureauResults) {
+    // --- Fonction utilitaire : filtrer par bureau et candidat ---
+    function getCandidateInBureau(results: any[], candidateQuery: string, bureauQuery: string): string {
+      candidateQuery = normalize(candidateQuery);
+      bureauQuery = normalize(bureauQuery);
+
+      // Filtrer les résultats pour ne conserver que ceux correspondant au bureau
+      const bureauResults = results.filter((result) => {
+        if (!result.nom_lieu) return false;
+        return normalize(result.nom_lieu).includes(bureauQuery) || result.numero_lieu === bureauQuery;
+      });
+      if (bureauResults.length === 0) {
         return `Aucun bureau de vote correspondant à "${bureauQuery}" n'a été trouvé.`;
       }
-      const participation = bureauResults.tx_participation;
-      return `Le taux de participation au bureau de vote "${bureauQuery}" est de ${participation}%.`;
+
+      // Rechercher le candidat dans le bureau filtré
+      for (const bureau of bureauResults) {
+        for (let i = 1; i <= 38; i++) {
+          const candidateName = bureau[`candidat_${i}`];
+          if (!candidateName) continue;
+          if (normalize(candidateName).includes(candidateQuery)) {
+            const votes = bureau[`nb_voix_${i}`];
+            const percentage = bureau[`pourcentage_${i}`];
+            return `${candidateName} a obtenu ${votes} voix (${percentage}%) au bureau de vote ${bureau.nom_lieu} (${bureau.numero_lieu}).`;
+          }
+        }
+      }
+      return `Aucun résultat trouvé pour "${candidateQuery}" au bureau "${bureauQuery}".`;
     }
   },
   examples: [
@@ -165,7 +174,7 @@ Exemple de réponse EXACTE :
       {
         user: "{{user1}}",
         content: {
-          text: "Quel est le taux de participation dans le groupe scolaire Carle Bahoi ?",
+          text: "Combien a fait Marechal Marion uniquement au Groupe Scolaire Jules Isaac aux élections européennes ?",
         },
       },
       {
@@ -173,42 +182,43 @@ Exemple de réponse EXACTE :
         content: { text: "", action: "FETCH_ELECTION" },
       },
     ],
-      [
+    [
       {
         user: "{{user1}}",
         content: {
-          text: "Donne-moi le résultat de Maréchal Marion au bureau de vote Collège Echange aux élections européennes"
-        }
+          text: "Montre-moi le résultat de Glucksmann au bureau de vote Collège Echange aux élections européennes ?",
+        },
       },
       {
         user: "{{user2}}",
-        content: { text: "", action: "FETCH_ELECTION" }
-      }
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
     ],
     [
       {
         user: "{{user1}}",
         content: {
-          text: "Qui a gagné au bureau 115 à Rennes ?"
-        }
+          text: "Quel est le score de Hayer Valérie au bureau 115 aux élections européennes ?",
+        },
       },
       {
         user: "{{user2}}",
-        content: { text: "", action: "FETCH_ELECTION" }
-      }
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
     ],
     [
       {
         user: "{{user1}}",
         content: {
-          text: "Liste des candidats au Groupe Scolaire Jules Isaac"
-        }
+          text: "Donne-moi le résultat de Maréchal Marion au bureau de vote Collège Echange aux élections européennes ?",
+        },
       },
       {
         user: "{{user2}}",
-        content: { text: "", action: "FETCH_ELECTION" }
-      }
-    ]
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Vous pouvez ajouter d'autres exemples selon les cas d'utilisation souhaités
   ] as ActionExample[][],
 };
 
