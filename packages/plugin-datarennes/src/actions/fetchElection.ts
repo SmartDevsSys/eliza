@@ -16,6 +16,16 @@ function normalize(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
+// Fonction pour extraire le JSON de la réponse, au cas où le modèle renvoie du texte additionnel
+function extractJSON(text: string): string {
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return text.substring(firstBrace, lastBrace + 1);
+  }
+  return text;
+}
+
 const fetchElectionAction: Action = {
   name: "FETCH_ELECTION",
   similes: ["ELECTION_DATA", "GET_ELECTION_RESULTS", "ELECTION_RESULTS", "VOTING_RESULTS"],
@@ -51,24 +61,25 @@ const fetchElectionAction: Action = {
     // Extraction des paramètres depuis le message utilisateur via generateText
     const extractionPrompt = `
 Analyse le message suivant concernant les résultats électoraux : "${_message.content.text}"
-Extrais les informations suivantes (si présentes) et renvoie un JSON valide :
+Extrais STRICTEMENT les informations suivantes en renvoyant uniquement un JSON sans texte additionnel :
 - "commune" : le nom de la commune (ex: "Rennes")
 - "bureau" : le nom ou numéro du bureau de vote (ex: "Groupe Scolaire Jules Isaac", "bureau 115")
 - "candidate" : le nom du candidat (ex: "Maréchal Marion")
 - "specificRequest" : une requête spécifique (ex: "taux de participation", "gagnant", "liste des candidats")
-Exemple de réponse :
-{
-  "commune": "rennes",
-  "bureau": "groupe scolaire jules isaac",
-  "candidate": "maréchal marion",
-  "specificRequest": null
-}`;
-    const extractedParamsText = await generateText({
+Exemple de réponse EXACTE :
+{"commune": "rennes", "bureau": "groupe scolaire jules isaac", "candidate": "maréchal marion", "specificRequest": null}
+`;
+    const extractedParamsTextRaw = await generateText({
       runtime: _runtime,
       context: extractionPrompt,
       modelClass: ModelClass.SMALL,
     });
-    console.log("Extracted parameters:", extractedParamsText);
+    console.log("Raw extracted parameters:", extractedParamsTextRaw);
+
+    // Extraire uniquement le JSON
+    const extractedParamsText = extractJSON(extractedParamsTextRaw);
+    console.log("Extracted JSON:", extractedParamsText);
+
     let params: { commune?: string; bureau?: string; candidate?: string; specificRequest?: string } = {};
     try {
       params = JSON.parse(extractedParamsText);
