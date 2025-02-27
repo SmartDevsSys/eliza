@@ -299,7 +299,6 @@ Exemple de réponse :
         const winner = winners[0];
         return `Le vainqueur au bureau de vote ${winner.bureau} (${winner.numero}) est ${winner.winner} avec ${winner.votes} voix (${winner.percentage}%)`;
       }
-      // Détermination du vainqueur global en comptant les victoires par candidat
       const winCounts: { [key: string]: number } = {};
       winners.forEach((w) => {
         winCounts[w.winner] = (winCounts[w.winner] || 0) + 1;
@@ -344,16 +343,18 @@ Exemple de réponse :
     }
   },
   examples: [
+    // Exemple 1 : Résultats généraux pour la commune
     [
       {
         user: "{{user1}}",
-        content: { text: "Quels sont les résultats des élections européennes à Rennes?" },
+        content: { text: "Quels sont les résultats des élections européennes à Rennes ?" },
       },
       {
         user: "{{user2}}",
         content: { text: "", action: "FETCH_ELECTION" },
       },
     ],
+    // Exemple 2 : Résultats pour un bureau spécifique
     [
       {
         user: "{{user1}}",
@@ -364,7 +365,116 @@ Exemple de réponse :
         content: { text: "", action: "FETCH_ELECTION" },
       },
     ],
-    // ... autres exemples
+    // Exemple 3 : Résultats pour un candidat (tous bureaux)
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Donne-moi les résultats pour Glucksmann" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 4 : Résultats pour un candidat dans un bureau précis
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Quels sont les résultats pour Glucksmann au bureau 115 ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 5 : Taux de participation global
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Quel est le taux de participation global ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 6 : Taux de participation pour un bureau spécifique
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Quel est le taux de participation au bureau de vote Centre ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 7 : Recherche du gagnant global
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Qui est le gagnant des élections ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 8 : Recherche du vainqueur pour un bureau spécifique
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Qui a remporté le bureau de vote du Centre ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 9 : Liste des candidats
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Peux-tu me fournir la liste des candidats ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 10 : Résultats détaillés pour une commune spécifique
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Montre-moi les résultats détaillés pour la commune de Rennes." },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 11 : Résultats pour un autre candidat
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Affiche les résultats électoraux pour le candidat Maréchal." },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
+    // Exemple 12 : Résultats pour un bureau identifié par son numéro
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Quel est le résultat du bureau 12 ?" },
+      },
+      {
+        user: "{{user2}}",
+        content: { text: "", action: "FETCH_ELECTION" },
+      },
+    ],
   ] as ActionExample[][],
 };
 
