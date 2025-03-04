@@ -75,6 +75,7 @@
     "@coinbase/coinbase-sdk": "0.10.0",
     "@deepgram/sdk": "^3.9.0",
     "@elizaos-plugins/adapter-sqlite": "workspace:*",
+    "@elizaos-plugins/adapter-supabase": "github:elizaos-plugins/adapter-supabase",
     "@elizaos-plugins/plugin-datarennes": "workspace:*",
     "@elizaos/plugin-football": "0.25.6-alpha.1",
     "@injectivelabs/sdk-ts": "^1.14.33",

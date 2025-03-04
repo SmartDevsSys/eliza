@@ -1,6 +1,6 @@
 import type { UUID, Character } from "@elizaos/core";
 
-const BASE_URL =`https://api-production-a46e.up.railway.app`;
+const BASE_URL =`http://localhost:3000`;
 
 console.log({ BASE_URL });
 

@@ -1,0 +1,15 @@
+{
+  "name": "legislators-import",
+  "version": "1.0.0",
+  "description": "Script to import legislators data to Supabase",
+  "type": "module",
+  "main": "import-legislators-to-supabase.js",
+  "scripts": {
+    "import": "node import-legislators-to-supabase.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.2",
+    "csv-parse": "^5.5.5",
+    "uuid": "^9.0.1"
+  }
+}

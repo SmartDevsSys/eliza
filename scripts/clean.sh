@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Navigate to the script's directory
-cd "$(dirname "$0")"/..
+export ELIZA_ROOT=$(pwd)
+
+# Navigate to the project root
+cd "$ELIZA_ROOT"
 echo "Cleanup started."
 # Find and remove node_modules directories, dist directories.
 find . -type d -name "node_modules" -exec rm -rf {} + \
