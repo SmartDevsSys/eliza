@@ -41,6 +41,9 @@ importers:
       '@elizaos-plugins/adapter-sqlite':
         specifier: workspace:*
         version: link:packages/adapter-sqlite
+      '@elizaos-plugins/adapter-supabase':
+        specifier: github:elizaos-plugins/adapter-supabase
+        version: https://codeload.github.com/elizaos-plugins/adapter-supabase/tar.gz/88401098c08be636a169f06a868446788d8bae53(bufferutil@4.0.9)(utf-8-validate@5.0.10)(whatwg-url@7.1.0)
       '@elizaos-plugins/plugin-datarennes':
         specifier: workspace:*
         version: link:packages/plugin-datarennes
@@ -168,7 +171,7 @@ importers:
         version: 29.7.0(@types/node@22.13.5)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3))
       ts-jest:
         specifier: ^29.2.5
-        version: 29.2.5(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(esbuild@0.24.2)(jest@29.7.0(@types/node@22.13.5)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3)))(typescript@5.6.3)
+        version: 29.2.5(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(jest@29.7.0(@types/node@22.13.5)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3)))(typescript@5.6.3)
       ts-node:
         specifier: 10.9.2
         version: 10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3)
@@ -424,6 +427,25 @@ importers:
       '@types/uuid':
         specifier: 10.0.0
         version: 10.0.0
+      '@vitest/coverage-v8':
+        specifier: ^3.0.2
+        version: 3.0.7(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.5)(jiti@1.21.7)(terser@5.39.0)(yaml@2.7.0))
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.11.1(@swc/helpers@0.5.15))(jiti@1.21.7)(postcss@8.5.3)(typescript@5.6.3)(yaml@2.7.0)
+      vitest:
+        specifier: ^3.0.2
+        version: 3.0.5(@types/debug@4.1.12)(@types/node@22.13.5)(jiti@1.21.7)(terser@5.39.0)(yaml@2.7.0)
+
+  packages/adapter-supabase:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: 2.46.2
+        version: 2.46.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+    devDependencies:
       '@vitest/coverage-v8':
         specifier: ^3.0.2
         version: 3.0.7(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.5)(jiti@1.21.7)(terser@5.39.0)(yaml@2.7.0))
@@ -2423,6 +2445,12 @@ packages:
   '@docusaurus/utils@3.7.0':
     resolution: {integrity: sha512-e7zcB6TPnVzyUaHMJyLSArKa2AG3h9+4CfvKXKKWNx6hRs+p0a+u7HHTJBgo6KW2m+vqDnuIHK4X+bhmoghAFA==}
     engines: {node: '>=18.0'}
+
+  '@elizaos-plugins/adapter-supabase@https://codeload.github.com/elizaos-plugins/adapter-supabase/tar.gz/88401098c08be636a169f06a868446788d8bae53':
+    resolution: {tarball: https://codeload.github.com/elizaos-plugins/adapter-supabase/tar.gz/88401098c08be636a169f06a868446788d8bae53}
+    version: 0.25.6-alpha.1
+    peerDependencies:
+      whatwg-url: 7.1.0
 
   '@elizaos/core@0.25.6-alpha.1':
     resolution: {integrity: sha512-JZEQfmyEDTyWtPyfAopG0Ztnnh5GqQxzdvJGGwWGAkVYO5uselQNiSeMDvuIsRArRHjQlLpg2cUqsv0Y3ngppA==}
@@ -4512,6 +4540,28 @@ packages:
   '@solana/web3.js@1.95.8':
     resolution: {integrity: sha512-sBHzNh7dHMrmNS5xPD1d0Xa2QffW/RXaxu/OysRXBfwTp+LYqGGmMtCYYwrHPrN5rjAmJCsQRNAwv4FM0t3B6g==}
 
+  '@supabase/auth-js@2.65.1':
+    resolution: {integrity: sha512-IA7i2Xq2SWNCNMKxwmPlHafBQda0qtnFr8QnyyBr+KaSxoXXqEzFCnQ1dGTy6bsZjVBgXu++o3qrDypTspaAPw==}
+
+  '@supabase/functions-js@2.4.3':
+    resolution: {integrity: sha512-sOLXy+mWRyu4LLv1onYydq+10mNRQ4rzqQxNhbrKLTLTcdcmS9hbWif0bGz/NavmiQfPs4ZcmQJp4WqOXlR4AQ==}
+
+  '@supabase/node-fetch@2.6.15':
+    resolution: {integrity: sha512-1ibVeYUacxWYi9i0cf5efil6adJ9WRyZBLivgjs+AUpewx1F3xPi7gLgaASI2SmIQxPoCEjAsLAzKPgMJVgOUQ==}
+    engines: {node: 4.x || >=6.0.0}
+
+  '@supabase/postgrest-js@1.16.3':
+    resolution: {integrity: sha512-HI6dsbW68AKlOPofUjDTaosiDBCtW4XAm0D18pPwxoW3zKOE2Ru13Z69Wuys9fd6iTpfDViNco5sgrtnP0666A==}
+
+  '@supabase/realtime-js@2.10.9':
+    resolution: {integrity: sha512-0AjN65VDNIScZzrrPaVvlND4vbgVS+j9Wcy3zf7e+l9JY4IwCTahFenPLcKy9bkr7KY0wfB7MkipZPKxMaDnjw==}
+
+  '@supabase/storage-js@2.7.1':
+    resolution: {integrity: sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==}
+
+  '@supabase/supabase-js@2.46.2':
+    resolution: {integrity: sha512-5FEzYMZhfIZrMWEqo5/dQincvrhM+DeMWH3/okeZrkBBW1AJxblOQhnhF4/dfNYK25oZ1O8dAnnxZ9gQqdr40w==}
+
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0':
     resolution: {integrity: sha512-b9MIk7yhdS1pMCZM8VeNfUlSKVRhsHZNMl5O9SfaX0l0t5wjdgu4IDzGB8bpnGBBOjGST3rRFVsaaEtI4W6f7g==}
     engines: {node: '>=14'}
@@ -4995,6 +5045,9 @@ packages:
   '@types/pdfjs-dist@2.10.378':
     resolution: {integrity: sha512-TRdIPqdsvKmPla44kVy4jv5Nt5vjMfVjbIEke1CRULIrwKNRC4lIiZvNYDJvbUMNCFPNIUcOKhXTyMJrX18IMA==}
     deprecated: This is a stub types definition. pdfjs-dist provides its own type definitions, so you do not need this installed.
+
+  '@types/phoenix@1.6.6':
+    resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
 
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
@@ -16542,6 +16595,14 @@ snapshots:
       - uglify-js
       - webpack-cli
 
+  '@elizaos-plugins/adapter-supabase@https://codeload.github.com/elizaos-plugins/adapter-supabase/tar.gz/88401098c08be636a169f06a868446788d8bae53(bufferutil@4.0.9)(utf-8-validate@5.0.10)(whatwg-url@7.1.0)':
+    dependencies:
+      '@supabase/supabase-js': 2.46.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      whatwg-url: 7.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@elizaos/core@0.25.6-alpha.1(@google-cloud/vertexai@1.9.3(encoding@0.1.13))(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)))(axios@1.8.1)(encoding@0.1.13)(react@19.0.0)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)':
     dependencies:
       '@ai-sdk/amazon-bedrock': 1.1.0(zod@3.24.1)
@@ -19042,6 +19103,48 @@ snapshots:
       - encoding
       - utf-8-validate
 
+  '@supabase/auth-js@2.65.1':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/functions-js@2.4.3':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/node-fetch@2.6.15':
+    dependencies:
+      whatwg-url: 5.0.0
+
+  '@supabase/postgrest-js@1.16.3':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/realtime-js@2.10.9(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+      '@types/phoenix': 1.6.6
+      '@types/ws': 8.5.14
+      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@supabase/storage-js@2.7.1':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/supabase-js@2.46.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@supabase/auth-js': 2.65.1
+      '@supabase/functions-js': 2.4.3
+      '@supabase/node-fetch': 2.6.15
+      '@supabase/postgrest-js': 1.16.3
+      '@supabase/realtime-js': 2.10.9(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      '@supabase/storage-js': 2.7.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0(@babel/core@7.26.9)':
     dependencies:
       '@babel/core': 7.26.9
@@ -19529,7 +19632,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 20.17.19
+      '@types/node': 22.13.5
       form-data: 4.0.2
 
   '@types/node-forge@1.3.11':
@@ -19573,6 +19676,8 @@ snapshots:
   '@types/pdfjs-dist@2.10.378':
     dependencies:
       pdfjs-dist: 4.10.38
+
+  '@types/phoenix@1.6.6': {}
 
   '@types/prismjs@1.26.5': {}
 
@@ -25925,7 +26030,7 @@ snapshots:
       array-differ: 3.0.0
       array-union: 2.1.0
       arrify: 2.0.1
-      minimatch: 3.0.5
+      minimatch: 3.1.2
 
   mustache@4.2.0: {}
 
@@ -29113,7 +29218,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  ts-jest@29.2.5(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(esbuild@0.24.2)(jest@29.7.0(@types/node@22.13.5)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3)))(typescript@5.6.3):
+  ts-jest@29.2.5(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(jest@29.7.0(@types/node@22.13.5)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.13.5)(typescript@5.6.3)))(typescript@5.6.3):
     dependencies:
       bs-logger: 0.2.6
       ejs: 3.1.10
@@ -29131,7 +29236,6 @@ snapshots:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       babel-jest: 29.7.0(@babel/core@7.26.9)
-      esbuild: 0.24.2
 
   ts-jest@29.2.5(@babel/core@7.26.9)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.9))(jest@29.7.0(@types/node@22.8.4)(ts-node@10.9.2(@swc/core@1.11.1(@swc/helpers@0.5.15))(@types/node@22.8.4)(typescript@5.6.3)))(typescript@5.6.3):
     dependencies:
